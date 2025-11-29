@@ -1,0 +1,55 @@
+# --- GERAL (Sistema Operacional e IDEs) ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+
+# --- ARQUIVOS DE AMBIENTE (SENHAS) ---
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# --- BACKEND (Python / Django) ---
+# Ambiente Virtual
+server/venv/
+server/env/
+server/.venv/
+
+# Cache e Compilados Python
+server/__pycache__/
+server/*.pyc
+server/*.pyo
+server/*.pyd
+
+# Banco de Dados Local (Caso use SQLite em algum momento)
+server/*.sqlite3
+server/db.sqlite3
+
+# Arquivos .env dentro da pasta server
+server/.env
+
+# Arquivos Estáticos/Media coletados localmente
+server/staticfiles/
+server/media/
+
+# --- FRONTEND (Node / React) ---
+# Dependências (Pesado!)
+client/node_modules/
+
+# Build de Produção
+client/dist/
+client/build/
+
+# Arquivos .env dentro da pasta client
+client/.env
+client/.env.local
+client/.env.*
+
+# Logs de erro
+client/npm-debug.log*
+client/yarn-debug.log*
+client/yarn-error.log*
+client/.eslintcache

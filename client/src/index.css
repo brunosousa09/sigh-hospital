@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-slate-900 text-slate-100 font-sans antialiased overflow-x-hidden;
+}
+
+@keyframes float {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(30px, 30px); }
+}
+.animate-float {
+  animation: float 10s infinite alternate;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fadeUp 0.5s ease-out forwards;
+}
+
+.glass-card {
+  @apply bg-white/5 backdrop-blur-xl border border-white/20 shadow-2xl;
+}
+
+.glass-input {
+  @apply w-full p-4 bg-black/20 border border-white/10 rounded-xl text-white outline-none focus:border-cyan-400 transition-all placeholder-slate-400;
+}
+
+.btn-gradient {
+  @apply w-full p-4 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl font-bold text-white hover:translate-y-[-2px] hover:shadow-lg hover:shadow-cyan-500/30 transition-all duration-300;
+}

@@ -29,11 +29,20 @@ export default function Login() {
     setErrorMsg('');
 
     try {
-      const response = await api.post('/token/', { username: user, password: pass });
-      localStorage.setItem('token', response.data.access);
-      localStorage.setItem('refresh_token', response.data.refresh);
-      setLoading(false);
-      startBootSequence();
+  const response = await api.post('/token/', { username: user, password: pass });
+  localStorage.setItem('token', response.data.access);
+  localStorage.setItem('refresh_token', response.data.refresh);
+      
+  
+  let role = 'gestor'; 
+  if (user.endsWith('.dev')) role = 'dev';
+  if (user.endsWith('.view')) role = 'view';
+      
+  localStorage.setItem('user_role', role); 
+  localStorage.setItem('user_name', user);
+
+  setLoading(false);
+  startBootSequence();
     } catch (error) {
       setLoading(false);
       if (error.response && error.response.status === 401) {

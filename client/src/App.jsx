@@ -8,6 +8,7 @@ import Saida from './pages/Saida';
 import Pendencias from './pages/Pendencias';
 import Pagamentos from './pages/Pagamentos';
 import Comparativo from './pages/Comparativo';
+import Usuarios from './pages/Usuarios';
 
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -19,7 +20,6 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Login />} />
-        
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/empresas" element={<PrivateRoute><Empresas /></PrivateRoute>} />
         <Route path="/entrada" element={<PrivateRoute><Entrada /></PrivateRoute>} />
@@ -27,7 +27,8 @@ function App() {
         <Route path="/pendencias" element={<PrivateRoute><Pendencias /></PrivateRoute>} />
         <Route path="/pagamentos" element={<PrivateRoute><Pagamentos /></PrivateRoute>} />
         <Route path="/comparativo" element={<PrivateRoute><Comparativo /></PrivateRoute>} />
-
+        <Route path="/usuarios" element={<PrivateRoute><Usuarios /></PrivateRoute>} />
+      
       </Routes>
     </Router>
   );

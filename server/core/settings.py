@@ -78,11 +78,38 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Tenta obter uma URL única de conexão (ex.: Render usa DATABASE_URL)
+database_url = os.getenv('DATABASE_URL')
+
+if database_url:
+    # Ambiente de produção (ou plataforma que fornece DATABASE_URL)
+    default_db = dj_database_url.config(default=database_url, conn_max_age=600)
+
+    # Truque: usa o mesmo DB para os testes quando estamos em produção
+    tests_db = default_db.copy()
+else:
+    # Ambiente local: monta a configuração a partir do .env
+    default_db = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
+    }
+
+    tests_db = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME_DEV', os.getenv('DB_NAME')),  # fallback se não houver DB_NAME_DEV
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
+    }
+
 DATABASES = {
-    'default': dj_database_url.config(
-        default=f"postgres://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}",
-        conn_max_age=600
-    )
+    'default': default_db,
+    'tests': tests_db,
 }
 
 DATABASE_ROUTERS = ['api.db_router.UserBasedRouter']

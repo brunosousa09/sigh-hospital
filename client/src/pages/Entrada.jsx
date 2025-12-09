@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
 import api from '../services/api';
-import { Download, Building2, FileText, DollarSign, CheckCircle2, AlertTriangle, X, Loader2, Package, MapPin } from 'lucide-react';
+import { Download, Building2, FileText, DollarSign, CheckCircle2, AlertTriangle, X, Loader2, Package, MapPin, Calendar } from 'lucide-react';
 
 export default function Entrada() {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
 
+  const hoje = new Date().toISOString().split('T')[0];
   
   const [companyId, setCompanyId] = useState('');
   const [nf, setNf] = useState('');
   const [valor, setValor] = useState('');
   const [descricao, setDescricao] = useState('');
   
+  const [dataEntrada, setDataEntrada] = useState(hoje);
+
   const [tipoMaterial, setTipoMaterial] = useState('medicamentos');
   const [destino, setDestino] = useState('hospital');
 
@@ -45,7 +47,13 @@ export default function Entrada() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!companyId || !valor || !nf) { 
+    
+    if (dataEntrada > hoje) {
+        showToast("A data de entrada não pode ser futura.", "error");
+        return;
+    }
+
+    if (!companyId || !valor || !nf || !dataEntrada) { 
       showToast("Preencha os campos obrigatórios (*).", "error"); 
       return; 
     }
@@ -60,7 +68,8 @@ export default function Entrada() {
         descricao: descricao || "Sem descrição", 
         valor: parseCurrency(valor),
         tipo_material: tipoMaterial,
-        destino_entrada: destino
+        destino_entrada: destino,
+        data_entrada: dataEntrada 
       };
 
       await api.post('/transacoes/', payload);
@@ -68,6 +77,7 @@ export default function Entrada() {
       
       setCompanyId(''); setNf(''); setValor(''); setDescricao(''); 
       setTipoMaterial('medicamentos'); setDestino('hospital');
+      setDataEntrada(hoje); 
     } catch (error) {
       showToast("Erro ao registrar entrada.", "error");
     } finally {
@@ -76,19 +86,17 @@ export default function Entrada() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-950 text-white overflow-hidden relative">
-      <Sidebar />
-
+    <>
       {notification.show && (
-        <div className={`fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl backdrop-blur-md border animate-fade-up ${notification.type === 'success' ? 'bg-green-500/10 border-green-500 text-green-400' : 'bg-red-500/10 border-red-500 text-red-400'}`}>
+        <div className={`fixed bottom-6 right-6 z-[100000] flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl backdrop-blur-md border animate-fade-up ${notification.type === 'success' ? 'bg-green-500/10 border-green-500 text-green-400' : 'bg-red-500/10 border-red-500 text-red-400'}`}>
           {notification.type === 'success' ? <CheckCircle2 size={24} /> : <AlertTriangle size={24} />}
           <div><h4 className="font-bold text-sm">{notification.type === 'success' ? 'Sucesso' : 'Erro'}</h4><p className="text-xs opacity-90">{notification.message}</p></div>
           <button onClick={() => setNotification({...notification, show: false})} className="ml-4 hover:opacity-70"><X size={16} /></button>
         </div>
       )}
 
-      <main className="flex-1 w-full overflow-y-auto p-4 sm:p-8 relative">
-        <header className="mb-8 animate-fade-up">
+      <div className="h-full w-full overflow-y-auto p-4 sm:p-8 relative animate-fade-up">
+        <header className="mb-8">
           <h2 className="text-2xl sm:text-3xl font-bold font-exo text-white flex items-center gap-2">
             <Download className="text-green-400 w-8 h-8" /> Registrar Entrada
           </h2>
@@ -97,8 +105,7 @@ export default function Entrada() {
 
         <div className="max-w-3xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl shadow-xl p-6 sm:p-8 animate-fade-up" style={{ animationDelay: '0.1s' }}>
           <form onSubmit={handleSubmit} className="space-y-6">
-            
-            <div className="w-full">
+             <div className="w-full">
               <label className="text-xs text-slate-400 font-bold uppercase mb-1 flex items-center gap-2"><Building2 size={14} /> Fornecedor <span className="text-red-500">*</span></label>
               <select value={companyId} onChange={(e) => setCompanyId(e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-xl p-4 text-white focus:border-green-400 outline-none cursor-pointer appearance-none">
                 <option value="">Selecione a Empresa...</option>
@@ -106,11 +113,23 @@ export default function Entrada() {
               </select>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div>
                 <label className="text-xs text-slate-400 font-bold uppercase mb-1 flex items-center gap-2"><FileText size={14} /> Número da NF <span className="text-red-500">*</span></label>
                 <input type="text" value={nf} onChange={(e) => setNf(e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-xl p-4 text-white focus:border-green-400 outline-none placeholder-slate-600" placeholder="Ex: 000.123" />
               </div>
+              
+              <div>
+                <label className="text-xs text-slate-400 font-bold uppercase mb-1 flex items-center gap-2"><Calendar size={14} /> Data Entrada <span className="text-red-500">*</span></label>
+                <input 
+                    type="date" 
+                    max={hoje} 
+                    value={dataEntrada} 
+                    onChange={(e) => setDataEntrada(e.target.value)} 
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl p-4 text-white focus:border-green-400 outline-none" 
+                />
+              </div>
+
               <div>
                 <label className="text-xs text-slate-400 font-bold uppercase mb-1 flex items-center gap-2"><DollarSign size={14} /> Valor Total <span className="text-red-500">*</span></label>
                 <input type="text" value={valor} onChange={handleMoneyChange} className="w-full bg-slate-950 border border-slate-700 rounded-xl p-4 text-white focus:border-green-400 outline-none font-mono text-lg" placeholder="R$ 0,00" />
@@ -119,7 +138,6 @@ export default function Entrada() {
 
             <div className="pt-4 border-t border-slate-800">
               <h4 className="text-green-400 text-sm font-bold uppercase mb-4 flex items-center gap-2"><Package size={16}/> Classificação do Material</h4>
-              
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="text-xs text-slate-400 font-bold uppercase mb-1 flex items-center gap-2">Tipo do Item</label>
@@ -129,7 +147,6 @@ export default function Entrada() {
                     <option value="insumo">Insumo</option>
                   </select>
                 </div>
-
                 <div>
                   <label className="text-xs text-slate-400 font-bold uppercase mb-1 flex items-center gap-2"><MapPin size={14} /> Destino Inicial</label>
                   <select value={destino} onChange={(e) => setDestino(e.target.value)} className="w-full bg-slate-950 border border-slate-700 rounded-xl p-4 text-white focus:border-green-400 outline-none cursor-pointer appearance-none">
@@ -152,7 +169,7 @@ export default function Entrada() {
             </div>
           </form>
         </div>
-      </main>
-    </div>
+      </div>
+    </>
   );
 }

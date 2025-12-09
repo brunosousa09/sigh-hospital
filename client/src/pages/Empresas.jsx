@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
 import api from '../services/api';
 import { 
   Building2, Plus, Trash2, Loader2, FileText, CheckCircle2, 
@@ -152,86 +151,18 @@ export default function Empresas() {
     : [];
 
   return (
-    <div className="flex h-screen bg-slate-950 text-white overflow-hidden relative">
-      <Sidebar />
-
+    <>
       {notification.show && (
-        <div className={`fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl backdrop-blur-md border animate-fade-up ${notification.type === 'success' ? 'bg-green-500/10 border-green-500 text-green-400' : 'bg-red-500/10 border-red-500 text-red-400'}`}>
+        <div className={`fixed bottom-6 right-6 z-[100000] flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl backdrop-blur-md border animate-fade-up ${notification.type === 'success' ? 'bg-green-500/10 border-green-500 text-green-400' : 'bg-red-500/10 border-red-500 text-red-400'}`}>
           {notification.type === 'success' ? <CheckCircle2 size={24} /> : <AlertTriangle size={24} />}
           <div><h4 className="font-bold text-sm">{notification.type === 'success' ? 'Sucesso' : 'Atenção'}</h4><p className="text-xs opacity-90">{notification.message}</p></div>
           <button onClick={() => setNotification({...notification, show: false})} className="ml-4 hover:opacity-70"><X size={16} /></button>
         </div>
       )}
 
-      <main className="flex-1 w-full overflow-y-auto p-4 sm:p-8 relative">
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 animate-fade-up">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-bold font-exo text-white flex items-center gap-2">
-              <Building2 className="text-cyan-400 w-8 h-8" /> Gestão de Empresas
-            </h2>
-            <p className="text-slate-400 text-sm">Base de fornecedores e contratos</p>
-          </div>
-          <button onClick={openCreateModal} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-3 rounded-xl font-bold transition-all active:scale-95 hover:shadow-lg hover:shadow-cyan-500/20">
-            <Plus size={20} /> Nova Empresa
-          </button>
-        </header>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl animate-fade-up overflow-hidden">
-          {loading ? (
-            <div className="p-8 text-center text-slate-500 flex justify-center items-center gap-2"><Loader2 className="animate-spin" /> Carregando...</div>
-          ) : companies.length === 0 ? (
-            <div className="p-8 text-center text-slate-500">Nenhum registro encontrado.</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-950 text-slate-400 uppercase text-xs font-bold whitespace-nowrap">
-                  <tr>
-                    <th className="p-4">Empresa</th>
-                    <th className="p-4">Ramos de Atividade</th>
-                    <th className="p-4 text-center">Licitação</th>
-                    <th className="p-4">Emendas</th>
-                    <th className="p-4 text-right">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800 text-sm">
-                  {companies.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-800/50 transition-colors">
-                      <td className="p-4">
-                        <p className="font-bold text-white">{c.nome}</p>
-                        <p className="text-slate-500 font-mono text-xs">{c.cnpj}</p>
-                      </td>
-                      <td className="p-4 max-w-[200px]">
-                        <div className="flex flex-wrap gap-1">
-                          {c.tipo && c.tipo.length > 0 ? c.tipo.map((tag, i) => (<span key={i} className="text-[10px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/20 truncate">{tag}</span>)) : <span className="text-slate-600 italic">--</span>}
-                        </div>
-                      </td>
-                      <td className="p-4 text-center">
-                        {c.licitacao ? (<span className="inline-flex items-center gap-1 bg-green-500/10 text-green-400 px-2 py-1 rounded-full text-xs font-bold border border-green-500/20"><CheckCircle2 size={12} /> SIM</span>) : (<span className="inline-flex items-center gap-1 bg-slate-700/30 text-slate-400 px-2 py-1 rounded-full text-xs border border-slate-600/20"><XCircle size={12} /> NÃO</span>)}
-                      </td>
-                      <td className="p-4 max-w-[200px]">
-                        <div className="flex flex-wrap gap-1">
-                          {c.emendas && c.emendas.length > 0 ? c.emendas.map((eme, i) => (<span key={i} className="text-[10px] bg-yellow-900/30 text-yellow-500 px-1.5 py-0.5 rounded border border-yellow-500/20 truncate">{eme}</span>)) : <span className="text-slate-600 italic">--</span>}
-                        </div>
-                      </td>
-                      <td className="p-4 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-2">
-                          <button onClick={() => openDetailsModal(c)} className="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-colors"><Eye size={18} /></button>
-                          <button onClick={() => openEditModal(c)} className="p-2 bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500 hover:text-slate-900 rounded-lg transition-colors"><Pencil size={18} /></button>
-                          <button onClick={() => handleDeleteClick(c.id)} className="p-2 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-colors"><Trash2 size={18} /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </main>
-
       {showDeleteModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center animate-fade-up">
+        <div className="fixed inset-0 z-[99999] h-screen w-screen flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center animate-fade-up relative z-10">
             <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
               <AlertTriangle className="text-red-500 w-8 h-8" />
             </div>
@@ -246,8 +177,9 @@ export default function Empresas() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-[95%] sm:w-full max-w-2xl flex flex-col max-h-[90vh] animate-fade-up">
+        <div className="fixed inset-0 z-[99999] h-screen w-screen flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="absolute inset-0" onClick={() => !saving && setShowModal(false)}></div>
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-[95%] sm:w-full max-w-2xl flex flex-col max-h-[90vh] animate-fade-up relative z-10">
             <div className="flex justify-between items-center p-6 border-b border-slate-800">
               <h3 className="text-xl font-bold text-white font-exo">{editingId ? "Editar Empresa" : "Novo Cadastro"}</h3>
               <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-white"><X size={24} /></button>
@@ -301,8 +233,9 @@ export default function Empresas() {
       )}
 
       {showDetails && selectedCompany && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4 animate-fade-in printing-modal-container">
-          <div id="modal-extract" className="bg-slate-900 print:bg-white text-white print:text-black border border-slate-700 print:border-none rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh] animate-fade-up relative print-area">
+        <div className="fixed inset-0 z-[99999] h-screen w-screen flex items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4 animate-fade-in printing-modal-container">
+          <div className="absolute inset-0" onClick={() => setShowDetails(false)}></div>
+          <div id="modal-extract" className="bg-slate-900 print:bg-white text-white print:text-black border border-slate-700 print:border-none rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh] animate-fade-up relative z-10 print-area">
             <button onClick={() => setShowDetails(false)} className="absolute top-4 right-4 p-2 bg-slate-800 print:hidden rounded-full hover:bg-slate-700 text-slate-400 hover:text-white transition-colors no-print"><X size={24} /></button>
             <div className="p-8 overflow-y-auto">
               <div className="text-center mb-8 border-b border-slate-800 print:border-slate-200 pb-6">
@@ -329,6 +262,72 @@ export default function Empresas() {
           </div>
         </div>
       )}
-    </div>
+
+      <div className="h-full w-full overflow-y-auto p-4 sm:p-8 relative animate-fade-up">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold font-exo text-white flex items-center gap-2">
+              <Building2 className="text-cyan-400 w-8 h-8" /> Gestão de Empresas
+            </h2>
+            <p className="text-slate-400 text-sm">Base de fornecedores e contratos</p>
+          </div>
+          <button onClick={openCreateModal} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-3 rounded-xl font-bold transition-all active:scale-95 hover:shadow-lg hover:shadow-cyan-500/20">
+            <Plus size={20} /> Nova Empresa
+          </button>
+        </header>
+
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+          {loading ? (
+            <div className="p-8 text-center text-slate-500 flex justify-center items-center gap-2"><Loader2 className="animate-spin" /> Carregando...</div>
+          ) : companies.length === 0 ? (
+            <div className="p-8 text-center text-slate-500">Nenhum registro encontrado.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-slate-950 text-slate-400 uppercase text-xs font-bold whitespace-nowrap">
+                  <tr>
+                    <th className="p-4">Empresa</th>
+                    <th className="p-4">Ramos de Atividade</th>
+                    <th className="p-4 text-center">Licitação</th>
+                    <th className="p-4">Emendas</th>
+                    <th className="p-4 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800 text-sm">
+                  {companies.map((c) => (
+                    <tr key={c.id} className="hover:bg-slate-800/50 transition-colors">
+                      <td className="p-4">
+                        <p className="font-bold text-white">{c.nome}</p>
+                        <p className="text-slate-500 font-mono text-xs">{c.cnpj}</p>
+                      </td>
+                      <td className="p-4 max-w-[200px]">
+                        <div className="flex flex-wrap gap-1">
+                          {c.tipo && c.tipo.length > 0 ? c.tipo.map((tag, i) => (<span key={i} className="text-[10px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/20 truncate">{tag}</span>)) : <span className="text-slate-600 italic">--</span>}
+                        </div>
+                      </td>
+                      <td className="p-4 text-center">
+                        {c.licitacao ? (<span className="inline-flex items-center gap-1 bg-green-500/10 text-green-400 px-2 py-1 rounded-full text-xs font-bold border border-green-500/20"><CheckCircle2 size={12} /> SIM</span>) : (<span className="inline-flex items-center gap-1 bg-slate-700/30 text-slate-400 px-2 py-1 rounded-full text-xs border border-slate-600/20"><XCircle size={12} /> NÃO</span>)}
+                      </td>
+                      <td className="p-4 max-w-[200px]">
+                        <div className="flex flex-wrap gap-1">
+                          {c.emendas && c.emendas.length > 0 ? c.emendas.map((eme, i) => (<span key={i} className="text-[10px] bg-yellow-900/30 text-yellow-500 px-1.5 py-0.5 rounded border border-yellow-500/20 truncate">{eme}</span>)) : <span className="text-slate-600 italic">--</span>}
+                        </div>
+                      </td>
+                      <td className="p-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => openDetailsModal(c)} className="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-colors"><Eye size={18} /></button>
+                          <button onClick={() => openEditModal(c)} className="p-2 bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500 hover:text-slate-900 rounded-lg transition-colors"><Pencil size={18} /></button>
+                          <button onClick={() => handleDeleteClick(c.id)} className="p-2 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-colors"><Trash2 size={18} /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
   );
 }

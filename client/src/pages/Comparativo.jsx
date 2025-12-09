@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
 import api from '../services/api';
-import { Scale, Building2, TrendingUp, TrendingDown, Wallet, Filter, Printer, Calendar, Loader2 } from 'lucide-react';
+import { Scale, Building2, TrendingDown, TrendingUp, Wallet, Printer, Calendar, Loader2 } from 'lucide-react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 
@@ -101,18 +100,15 @@ export default function Comparativo() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-950 text-white overflow-hidden">
-      <Sidebar />
-
-      <main className="flex-1 w-full overflow-y-auto p-4 sm:p-8 relative">
-        <header className="mb-8 animate-fade-up no-print">
+    <div className="h-full w-full overflow-y-auto p-4 sm:p-8 relative animate-fade-up">
+        <header className="mb-8 no-print">
           <h2 className="text-2xl sm:text-3xl font-bold font-exo text-white flex items-center gap-2">
             <Scale className="text-cyan-400 w-8 h-8" /> Análise Financeira
           </h2>
           <p className="text-slate-400 text-sm">Relatórios gerenciais e comparativos</p>
         </header>
 
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-lg mb-8 animate-fade-up no-print">
+        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-lg mb-8 no-print">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div className="md:col-span-2">
               <label className="text-xs text-slate-400 font-bold uppercase mb-2 flex items-center gap-2"><Building2 size={14} /> Fornecedor</label>
@@ -134,7 +130,7 @@ export default function Comparativo() {
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center h-96 animate-fade-up">
+          <div className="flex flex-col items-center justify-center h-96">
             <div className="relative">
               <div className="absolute inset-0 bg-cyan-500 blur-xl opacity-20 rounded-full"></div>
               <Loader2 size={64} className="text-cyan-400 animate-spin relative z-10" />
@@ -142,7 +138,7 @@ export default function Comparativo() {
             <p className="mt-4 text-slate-400 font-medium animate-pulse">Processando dados financeiros...</p>
           </div>
         ) : (
-          <div id="report-section" className="animate-fade-up">
+          <div id="report-section">
             
             <div className="hidden print:block text-center mb-8 border-b border-black pb-4">
               <h1 className="text-2xl font-bold uppercase">Hospital José Leite da Silva</h1>
@@ -226,7 +222,6 @@ export default function Comparativo() {
             </div>
           </div>
         )}
-      </main>
     </div>
   );
 }

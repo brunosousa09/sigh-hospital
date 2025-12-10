@@ -13,6 +13,7 @@ export default function Empresas() {
   const [showModal, setShowModal] = useState(false); 
   const [showDetails, setShowDetails] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   
   const [saving, setSaving] = useState(false);
@@ -134,27 +135,14 @@ export default function Empresas() {
     }
   };
 
-  const getCompanyTransactions = () => {
+  const getDetailsTransactions = () => {
     if (!selectedCompany) return [];
-    const trans = allTransactions.filter(t => t.empresa === selectedCompany.id);
-    
-    return trans.sort((a, b) => {
-        const dateA = new Date(a.data_entrada || a.data_saida || a.data);
-        const dateB = new Date(b.data_entrada || b.data_saida || b.data);
-        return dateA - dateB;
-    });
+    // Ordenação: Antiga -> Recente
+    return allTransactions.filter(t => t.empresa === selectedCompany.id)
+      .sort((a, b) => new Date(a.data_entrada || a.data_saida || a.data) - new Date(b.data_entrada || b.data_saida || b.data));
   };
-
-  const calculateTotalDetails = (transactions) => {
-    let total = 0;
-    transactions.forEach(t => {
-      if(t.tipo === 'entrada') total += parseFloat(t.valor);
-      else total -= parseFloat(t.valor);
-    });
-    return total;
-  };
-
-  const detailsTransactions = getCompanyTransactions();
+  const detailsTransactions = getDetailsTransactions();
+  const totalDetails = detailsTransactions.reduce((acc, t) => t.tipo === 'entrada' ? acc + parseFloat(t.valor) : acc - parseFloat(t.valor), 0);
 
   return (
     <>
@@ -238,11 +226,11 @@ export default function Empresas() {
         <div className="fixed inset-0 z-[99999] h-screen w-screen flex items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4 animate-fade-in printing-modal-container">
           <div className="absolute inset-0 no-print" onClick={() => setShowDetails(false)}></div>
           
-          <div id="modal-extract" className="printable-content bg-slate-900 print:bg-white text-white print:text-black border border-slate-700 print:border-none rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] print:max-h-none print:overflow-visible animate-fade-up relative z-10 print-area">
+          <div id="modal-extract" className="printable-content bg-slate-900 print:bg-white text-white print:text-black border border-slate-700 print:border-none rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh] print:max-h-none print:overflow-visible animate-fade-up relative z-10 print-area">
             
             <button onClick={() => setShowDetails(false)} className="absolute top-4 right-4 p-2 bg-slate-800 print:hidden rounded-full hover:bg-slate-700 text-slate-400 hover:text-white transition-colors no-print"><X size={24} /></button>
             
-            <div className="p-8 overflow-y-auto print:overflow-visible custom-scrollbar">
+            <div className="p-8 flex-1 overflow-y-auto custom-scrollbar print:overflow-visible">
               
               <div className="text-center mb-8 border-b border-slate-800 print:border-slate-300 pb-6">
                 <h2 className="text-2xl font-bold text-cyan-400 print:text-black font-exo mb-1">Hospital José Leite da Silva</h2>
@@ -312,7 +300,7 @@ export default function Empresas() {
 
             </div>
             
-            <div className="p-6 border-t border-slate-800 bg-slate-900/50 rounded-b-2xl flex justify-end no-print">
+            <div className="p-6 border-t border-slate-800 bg-slate-900/50 rounded-b-2xl flex justify-end flex-shrink-0 no-print">
                 <button onClick={() => window.print()} className="flex items-center gap-2 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">
                     <Printer size={20} /> Imprimir Relatório
                 </button>
@@ -322,7 +310,7 @@ export default function Empresas() {
         </div>
       )}
 
-     <div className={`h-full w-full overflow-y-auto p-4 sm:p-8 relative animate-fade-up ${showDetails ? 'no-print' : ''}`}>
+      <div className={`h-full w-full overflow-y-auto p-4 sm:p-8 relative animate-fade-up ${showDetails ? 'no-print' : ''}`}>
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 no-print">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold font-exo text-white flex items-center gap-2">

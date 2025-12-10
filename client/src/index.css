@@ -13,49 +13,67 @@ body {
 .animate-fade-up { animation: fadeUp 0.5s ease-out forwards; }
 
 .glass-card { @apply bg-white/5 backdrop-blur-xl border border-white/20 shadow-2xl; }
-.glass-input { @apply w-full p-4 bg-black/20 border border-white/10 rounded-xl text-white outline-none focus:border-cyan-400 transition-all placeholder-slate-400; }
-.btn-gradient { @apply w-full p-4 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl font-bold text-white hover:translate-y-[-2px] hover:shadow-lg hover:shadow-cyan-500/30 transition-all duration-300; }
-
 .custom-scrollbar::-webkit-scrollbar { width: 8px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: rgba(30, 41, 59, 0.5); }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.8); border-radius: 4px; }
 
-@media print {
+@media screen and (max-width: 1024px) {
+  .table-responsive-wrapper {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   
+  .table-responsive-wrapper table {
+    min-width: 800px; 
+  }
+}
+
+@media print {
   body * {
     visibility: hidden;
   }
+  
+  @page {
+    size: A4;
+    margin: 10mm; 
+  }
 
-  #print-area, #print-area * {
-    visibility: visible;
+  body {
+    background: white;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
 
   #print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
+    visibility: visible;
+    position: static !important; 
     width: 100%;
-    margin: 0;
-    padding: 0;
+    max-width: 190mm; 
+    margin: 0 auto;
     background-color: white !important;
     color: black !important;
     border: none !important;
     box-shadow: none !important;
-    overflow: visible !important; 
+    overflow: visible !important;
   }
 
-  @page {
-    size: A4;
-    margin: 10mm 15mm;
+  #print-area * {
+    visibility: visible;
   }
 
-  #print-area table { width: 100% !important; border-collapse: collapse !important; font-size: 10pt !important; }
-  #print-area thead { background-color: #f3f4f6 !important; display: table-header-group; border-bottom: 2px solid #000 !important; }
+  #print-area table { width: 100% !important; border-collapse: collapse !important; }
+  #print-area thead { background-color: #f3f4f6 !important; border-bottom: 2px solid #000 !important; }
   #print-area tr { page-break-inside: avoid; border-bottom: 1px solid #ddd !important; }
   #print-area th, #print-area td { color: black !important; padding: 6px 4px !important; border: none !important; }
-  #print-area h1, #print-area h2, #print-area h3, #print-area p, #print-area span { color: black !important; text-shadow: none !important; }
   
-  .no-print {
-    display: none !important;
-  }
+  .no-print { display: none !important; }
 }

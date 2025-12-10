@@ -182,7 +182,7 @@ export default function Comparativo() {
                   <h3 className="font-bold text-white print:text-black">Detalhamento das Movimentações</h3>
                 </div>
 
-                <div className="max-h-[500px] print:max-h-none overflow-y-auto print:overflow-visible custom-scrollbar">
+                <div className="max-h-[500px] print:max-h-none overflow-y-auto print:overflow-visible custom-scrollbar table-responsive-wrapper">
                   <table className="w-full text-left text-sm print:text-xs border-collapse">
                     <thead className="bg-slate-950 print:bg-white text-slate-400 print:text-black uppercase text-xs sticky top-0 print:static border-b print:border-black">
                       <tr>

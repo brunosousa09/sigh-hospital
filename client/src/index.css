@@ -8,10 +8,8 @@ body {
 
 @keyframes float { 0% { transform: translate(0, 0); } 100% { transform: translate(30px, 30px); } }
 .animate-float { animation: float 10s infinite alternate; }
-
 @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 .animate-fade-up { animation: fadeUp 0.5s ease-out forwards; }
-
 .glass-card { @apply bg-white/5 backdrop-blur-xl border border-white/20 shadow-2xl; }
 .glass-input { @apply w-full p-4 bg-black/20 border border-white/10 rounded-xl text-white outline-none focus:border-cyan-400 transition-all placeholder-slate-400; }
 .btn-gradient { @apply w-full p-4 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl font-bold text-white hover:translate-y-[-2px] hover:shadow-lg hover:shadow-cyan-500/30 transition-all duration-300; }
@@ -21,69 +19,53 @@ body {
 .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.8); border-radius: 4px; }
 
 @media print {
-  aside, header, nav, .sidebar, button, .no-print, ::-webkit-scrollbar, [class*="sidebar"] {
+  aside, header, nav, .sidebar, button, .no-print, ::-webkit-scrollbar {
     display: none !important;
   }
 
-  html, body, #root, .flex, .h-screen, .overflow-hidden, .overflow-y-auto, .fixed {
+  canvas {
+    display: none !important;
+  }
+
+  html, body, #root {
     height: auto !important;
     width: 100% !important;
     overflow: visible !important;
-    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: white !important;
+    color: black !important;
     display: block !important;
+  }
+
+  .printable-content {
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    z-index: 9999 !important; 
     background-color: white !important;
     color: black !important;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 20px !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important; 
   }
 
   @page {
     size: A4;
-    margin: 10mm 15mm;
+    margin: 10mm 15mm; 
   }
 
-  .printable-content {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 auto !important;
-    padding: 0 !important;
-    border: none !important;
-    box-shadow: none !important;
-    background: white !important;
-    color: black !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    z-index: 9999;
-  }
-
-  h1, h2, h3, h4, p, span, div {
-    color: black !important;
-    text-shadow: none !important;
-  }
-
-  table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-    font-size: 10pt !important;
-  }
-
-  thead {
-    background-color: #f3f4f6 !important;
-    display: table-header-group;
-  }
-
-  tr {
-    page-break-inside: avoid;
-  }
-
-  th, td {
-    border: 1px solid #cbd5e1 !important;
-    padding: 6px 8px !important;
-    color: black !important;
-  }
-
-  .text-green-500, .text-green-400 { color: #166534 !important; font-weight: bold; } 
-  .text-red-500, .text-red-400 { color: #991b1b !important; font-weight: bold; }     
-  .text-yellow-500, .text-yellow-400 { color: #854d0e !important; font-weight: bold; } 
+  table { width: 100% !important; border-collapse: collapse !important; font-size: 10pt !important; }
+  thead { background-color: #f3f4f6 !important; display: table-header-group; border-bottom: 2px solid #000 !important; }
+  tr { page-break-inside: avoid; border-bottom: 1px solid #ddd !important; }
+  th, td { color: black !important; padding: 6px 4px !important; border: none !important; }
+  
+  h1, h2, h3, p, span, strong { color: black !important; text-shadow: none !important; }
+  .text-green-500, .text-green-400 { color: #166534 !important; } 
+  .text-red-500, .text-red-400 { color: #991b1b !important; }     
 }

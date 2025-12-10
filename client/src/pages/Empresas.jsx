@@ -13,7 +13,6 @@ export default function Empresas() {
   const [showModal, setShowModal] = useState(false); 
   const [showDetails, setShowDetails] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   
   const [saving, setSaving] = useState(false);
@@ -137,7 +136,6 @@ export default function Empresas() {
 
   const getCompanyTransactions = () => {
     if (!selectedCompany) return [];
-    
     const trans = allTransactions.filter(t => t.empresa === selectedCompany.id);
     
     return trans.sort((a, b) => {
@@ -161,8 +159,8 @@ export default function Empresas() {
   return (
     <>
       {notification.show && (
-        <div className={`fixed bottom-6 right-6 z-[100000] flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl backdrop-blur-md border animate-fade-up ${notification.type === 'success' ? 'bg-green-500/10 border-green-500 text-green-400' : 'bg-red-500/10 border-red-500 text-red-400'}`}>
-          {notification.type === 'success' ? <CheckCircle2 size={24} /> : <AlertTriangle size={24} />}
+        <div className="fixed bottom-6 right-6 z-[100000] flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl backdrop-blur-md border bg-slate-800 text-white border-slate-700 animate-fade-up no-print">
+          {notification.type === 'success' ? <CheckCircle2 size={24} className="text-green-400" /> : <AlertTriangle size={24} className="text-red-400" />}
           <div><h4 className="font-bold text-sm">{notification.type === 'success' ? 'Sucesso' : 'Atenção'}</h4><p className="text-xs opacity-90">{notification.message}</p></div>
           <button onClick={() => setNotification({...notification, show: false})} className="ml-4 hover:opacity-70"><X size={16} /></button>
         </div>
@@ -171,14 +169,10 @@ export default function Empresas() {
       {showDeleteModal && (
         <div className="fixed inset-0 z-[99999] h-screen w-screen flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in no-print">
           <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center animate-fade-up relative z-10">
-            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-              <AlertTriangle className="text-red-500 w-8 h-8" />
-            </div>
             <h3 className="text-xl font-bold text-white mb-2">Excluir Empresa?</h3>
-            <p className="text-slate-400 text-sm mb-6">Essa ação é irreversível.</p>
-            <div className="flex gap-3">
-              <button onClick={() => setShowDeleteModal(false)} className="flex-1 p-3 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors">Cancelar</button>
-              <button onClick={confirmDelete} className="flex-1 p-3 rounded-xl bg-gradient-to-r from-red-600 to-red-500 text-white font-bold hover:shadow-lg hover:shadow-red-500/25 transition-all">Sim, Excluir</button>
+            <div className="flex gap-3 mt-4">
+              <button onClick={() => setShowDeleteModal(false)} className="flex-1 p-3 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800">Cancelar</button>
+              <button onClick={confirmDelete} className="flex-1 p-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-500">Sim, Excluir</button>
             </div>
           </div>
         </div>
@@ -211,7 +205,7 @@ export default function Empresas() {
                   </div>
                 </div>
                 <div className="w-full">
-                  <label className="text-xs text-blue-400 font-bold uppercase flex items-center gap-2 mb-2"><Briefcase size={14} /> Ramos de Atividade <span className="text-red-500">*</span></label>
+                  <label className="text-xs text-blue-400 font-bold uppercase flex items-center gap-2 mb-2"><Briefcase size={14} /> Ramos de Atividade</label>
                   <div className="flex gap-2">
                     <input value={tempRamo} onChange={e => setTempRamo(e.target.value)} onKeyDown={e => e.key === 'Enter' && addTag(e, 'ramo')} className="flex-1 bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white focus:border-blue-500 outline-none" placeholder="Digite e dê Enter" />
                     <button type="button" onClick={e => addTag(e, 'ramo')} className="px-4 bg-slate-800 hover:bg-slate-700 text-blue-500 rounded-xl"><Plus size={20}/></button>
@@ -244,7 +238,7 @@ export default function Empresas() {
         <div className="fixed inset-0 z-[99999] h-screen w-screen flex items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4 animate-fade-in printing-modal-container">
           <div className="absolute inset-0 no-print" onClick={() => setShowDetails(false)}></div>
           
-          <div id="modal-extract" className="printable-content bg-slate-900 print:bg-white text-white print:text-black border border-slate-700 print:border-none rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh] print:max-h-none print:overflow-visible animate-fade-up relative z-10 print-area">
+          <div id="modal-extract" className="printable-content bg-slate-900 print:bg-white text-white print:text-black border border-slate-700 print:border-none rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] print:max-h-none print:overflow-visible animate-fade-up relative z-10 print-area">
             
             <button onClick={() => setShowDetails(false)} className="absolute top-4 right-4 p-2 bg-slate-800 print:hidden rounded-full hover:bg-slate-700 text-slate-400 hover:text-white transition-colors no-print"><X size={24} /></button>
             
@@ -328,7 +322,7 @@ export default function Empresas() {
         </div>
       )}
 
-      <div className={`h-full w-full overflow-y-auto p-4 sm:p-8 relative animate-fade-up ${showDetails ? 'no-print' : ''}`}>
+     <div className={`h-full w-full overflow-y-auto p-4 sm:p-8 relative animate-fade-up ${showDetails ? 'no-print' : ''}`}>
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 no-print">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold font-exo text-white flex items-center gap-2">

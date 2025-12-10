@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Scale, Building2, Printer, Calendar, Loader2, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
+import { Scale, Building2, TrendingDown, TrendingUp, Wallet, Printer, Calendar, Loader2 } from 'lucide-react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 
@@ -57,7 +57,7 @@ export default function Comparativo() {
       result = result.filter(t => t.tipo === filterType);
     }
 
-    // Ordenação: Antiga -> Recente
+    // Ordenação Cronológica (Antiga -> Recente)
     result.sort((a, b) => {
         const dateA = new Date(a.data_entrada || a.data_saida || a.data);
         const dateB = new Date(b.data_entrada || b.data_saida || b.data);
@@ -79,11 +79,20 @@ export default function Comparativo() {
   };
 
   const formatMoney = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  const formatDate = (ds) => ds ? new Date(ds).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '-';
+  
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+  };
+
   const getClassificacao = (t) => {
-    if (t.tipo === 'entrada') return t.tipo_material ? (t.tipo_material.charAt(0).toUpperCase() + t.tipo_material.slice(1)) : 'Geral';
-    const match = t.descricao ? t.descricao.match(/^\[(.*?)\]/) : null;
-    return match ? match[1] : 'Saída Diversa';
+    if (t.tipo === 'entrada') {
+      if (!t.tipo_material) return 'Geral';
+      return t.tipo_material.charAt(0).toUpperCase() + t.tipo_material.slice(1);
+    } else {
+      const match = t.descricao ? t.descricao.match(/^\[(.*?)\]/) : null;
+      return match ? match[1] : 'Saída Diversa';
+    }
   };
 
   const chartData = {
@@ -97,7 +106,7 @@ export default function Comparativo() {
   };
 
   return (
-    <div className="h-full w-full overflow-y-auto p-4 sm:p-8 animate-fade-up">
+    <div className="h-full w-full overflow-y-auto p-4 sm:p-8 relative animate-fade-up">
         
         <div className="no-print">
             <header className="mb-8">
@@ -131,33 +140,37 @@ export default function Comparativo() {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center h-96">
-            <Loader2 size={64} className="text-cyan-400 animate-spin" />
-            <p className="mt-4 text-slate-400 font-medium">Processando dados...</p>
+            <div className="relative">
+              <div className="absolute inset-0 bg-cyan-500 blur-xl opacity-20 rounded-full"></div>
+              <Loader2 size={64} className="text-cyan-400 animate-spin relative z-10" />
+            </div>
+            <p className="mt-4 text-slate-400 font-medium animate-pulse">Processando dados financeiros...</p>
           </div>
         ) : (
-          <div className="printable-content">
+          <div id="report-section" className="printable-content">
             
             <div className="hidden print:block text-center mb-8 border-b border-black pb-4">
-              <h1 className="text-2xl font-bold uppercase">Relatório Financeiro Analítico</h1>
-              <p className="text-sm">Hospital José Leite da Silva</p>
-              <p className="text-xs mt-2 text-gray-600">
+              <h1 className="text-2xl font-bold uppercase">Hospital José Leite da Silva</h1>
+              <p className="text-sm">Relatório Financeiro Analítico</p>
+              <p className="text-xs mt-2 text-gray-500">
                 <strong>Filtro:</strong> {selectedCompanyId === 'all' ? 'Todos os Fornecedores' : companies.find(c => c.id == selectedCompanyId)?.nome} | 
-                {filterDate ? ` Período: ${filterDate}` : ' Todo o Período'}
+                {filterDate ? ` Período: ${filterDate}` : ' Todo o Período'} |
+                Ordenação: Data Antiga → Recente
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 print:grid-cols-3 print:gap-4">
-              <div className="p-6 bg-slate-900 print:bg-white border border-red-500/20 print:border-black rounded-2xl shadow-lg">
-                <p className="text-slate-400 print:text-black text-sm mb-1 font-bold">Total Compras</p>
-                <h3 className="text-2xl font-bold text-red-400 print:text-black font-mono">{formatMoney(stats.totalIn)}</h3>
+              <div className="p-6 bg-slate-900 print:bg-white border border-red-500/20 print:border-black rounded-2xl shadow-lg flex items-center justify-between">
+                <div><p className="text-slate-400 print:text-black text-sm mb-1 font-bold">Total Compras (Dívida)</p><h3 className="text-2xl font-bold text-red-400 print:text-black font-mono">{formatMoney(stats.totalIn)}</h3></div>
+                <div className="p-3 bg-red-500/10 rounded-full text-red-400 print:hidden"><TrendingDown size={24} /></div>
               </div>
-              <div className="p-6 bg-slate-900 print:bg-white border border-green-500/20 print:border-black rounded-2xl shadow-lg">
-                <p className="text-slate-400 print:text-black text-sm mb-1 font-bold">Total Pago</p>
-                <h3 className="text-2xl font-bold text-green-400 print:text-black font-mono">{formatMoney(stats.totalOut)}</h3>
+              <div className="p-6 bg-slate-900 print:bg-white border border-green-500/20 print:border-black rounded-2xl shadow-lg flex items-center justify-between">
+                <div><p className="text-slate-400 print:text-black text-sm mb-1 font-bold">Total Pagos (Baixas)</p><h3 className="text-2xl font-bold text-green-400 print:text-black font-mono">{formatMoney(stats.totalOut)}</h3></div>
+                <div className="p-3 bg-green-500/10 rounded-full text-green-400 print:hidden"><TrendingUp size={24} /></div>
               </div>
-              <div className="p-6 bg-slate-900 print:bg-white border border-slate-700 print:border-black rounded-2xl shadow-lg">
-                <p className="text-slate-400 print:text-black text-sm mb-1 font-bold">Saldo Devedor</p>
-                <h3 className="text-2xl font-bold text-white print:text-black font-mono">{formatMoney(stats.balance)}</h3>
+              <div className="p-6 bg-slate-900 print:bg-white border border-slate-700 print:border-black rounded-2xl shadow-lg flex items-center justify-between">
+                <div><p className="text-slate-400 print:text-black text-sm mb-1 font-bold">Saldo Devedor Atual</p><h3 className={`text-2xl font-bold font-mono ${stats.balance > 0 ? 'text-red-500 print:text-black' : 'text-green-500 print:text-black'}`}>{formatMoney(stats.balance)}</h3></div>
+                <div className="p-3 bg-slate-800 rounded-full text-slate-300 print:hidden"><Wallet size={24} /></div>
               </div>
             </div>
 
@@ -165,17 +178,18 @@ export default function Comparativo() {
               
               <div className="lg:col-span-2 bg-slate-900 print:bg-white border border-slate-800 print:border-none rounded-2xl overflow-hidden shadow-xl print:shadow-none print:w-full">
                 <div className="p-4 border-b border-slate-800 print:border-black bg-slate-900/50 print:bg-white">
-                  <h3 className="font-bold text-white print:text-black">Detalhamento</h3>
+                  <h3 className="font-bold text-white print:text-black">Detalhamento das Movimentações</h3>
                 </div>
-
+                
                 <div className="max-h-[500px] print:max-h-none overflow-y-auto print:overflow-visible custom-scrollbar">
                   <table className="w-full text-left text-sm print:text-xs border-collapse">
-                    <thead className="bg-slate-950 print:bg-gray-100 text-slate-400 print:text-black uppercase text-xs sticky top-0 print:static border-b print:border-black">
+                    <thead className="bg-slate-950 print:bg-white text-slate-400 print:text-black uppercase text-xs sticky top-0 print:static border-b print:border-black">
                       <tr>
                         <th className="p-4 print:p-2 border-b print:border-black">Data</th>
                         <th className="p-4 print:p-2 border-b print:border-black">Empresa</th>
                         <th className="p-4 print:p-2 border-b print:border-black">Tipo</th>
-                        <th className="p-4 print:p-2 border-b print:border-black">NF/Desc</th>
+                        <th className="p-4 print:p-2 border-b print:border-black">Classificação / Setor</th>
+                        <th className="p-4 print:p-2 border-b print:border-black">NF</th>
                         <th className="p-4 text-right print:p-2 border-b print:border-black">Valor</th>
                       </tr>
                     </thead>
@@ -190,17 +204,22 @@ export default function Comparativo() {
                           </td>
                           <td className="p-4 print:p-2 font-bold">
                             <span className={`print-font-bold ${t.tipo === 'entrada' ? 'text-red-400 print:text-black' : 'text-green-400 print:text-black'}`}>
-                              {t.tipo === 'entrada' ? 'COMPRA' : 'BAIXA'}
+                              {t.tipo === 'entrada' ? 'COMPRA' : 'PAGO'}
                             </span>
                           </td>
-                          <td className="p-4 print:p-2 text-slate-300 print:text-black">{t.nf || t.descricao}</td>
+                          
+                          <td className="p-4 print:p-2 font-medium text-cyan-300 print:text-black">
+                            {getClassificacao(t)}
+                          </td>
+
+                          <td className="p-4 print:p-2 text-slate-300 print:text-black">{t.nf || '-'}</td>
                           <td className="p-4 text-right font-mono font-medium print:p-2">
                             {formatMoney(parseFloat(t.valor))}
                           </td>
                         </tr>
                       ))}
                       {filteredTransactions.length === 0 && (
-                        <tr><td colSpan="5" className="p-8 text-center italic text-slate-500 print:text-black">Nenhum dado para este filtro.</td></tr>
+                        <tr><td colSpan="6" className="p-8 text-center italic text-slate-500 print:text-black">Nenhum dado para este filtro.</td></tr>
                       )}
                     </tbody>
                   </table>

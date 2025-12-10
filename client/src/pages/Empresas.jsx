@@ -135,20 +135,29 @@ export default function Empresas() {
     }
   };
 
-  const calculateTotalDetails = () => {
-    if (!selectedCompany) return 0;
-    const companyTrans = allTransactions.filter(t => t.empresa === selectedCompany.id);
+  
+  const getCompanyTransactions = () => {
+    if (!selectedCompany) return [];
+    
+    const trans = allTransactions.filter(t => t.empresa === selectedCompany.id);
+    
+    return trans.sort((a, b) => {
+        const dateA = new Date(a.data_entrada || a.data_saida || a.data);
+        const dateB = new Date(b.data_entrada || b.data_saida || b.data);
+        return dateA - dateB;
+    });
+  };
+
+  const calculateTotalDetails = (transactions) => {
     let total = 0;
-    companyTrans.forEach(t => {
+    transactions.forEach(t => {
       if(t.tipo === 'entrada') total += parseFloat(t.valor);
       else total -= parseFloat(t.valor);
     });
     return total;
   };
 
-  const detailsTransactions = selectedCompany 
-    ? allTransactions.filter(t => t.empresa === selectedCompany.id) 
-    : [];
+  const detailsTransactions = getCompanyTransactions();
 
   return (
     <>
@@ -161,7 +170,7 @@ export default function Empresas() {
       )}
 
       {showDeleteModal && (
-        <div className="fixed inset-0 z-[99999] h-screen w-screen flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
+        <div className="fixed inset-0 z-[99999] h-screen w-screen flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in no-print">
           <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center animate-fade-up relative z-10">
             <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
               <AlertTriangle className="text-red-500 w-8 h-8" />
@@ -177,7 +186,7 @@ export default function Empresas() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 z-[99999] h-screen w-screen flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
+        <div className="fixed inset-0 z-[99999] h-screen w-screen flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in no-print">
           <div className="absolute inset-0" onClick={() => !saving && setShowModal(false)}></div>
           <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-[95%] sm:w-full max-w-2xl flex flex-col max-h-[90vh] animate-fade-up relative z-10">
             <div className="flex justify-between items-center p-6 border-b border-slate-800">
@@ -234,37 +243,94 @@ export default function Empresas() {
 
       {showDetails && selectedCompany && (
         <div className="fixed inset-0 z-[99999] h-screen w-screen flex items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4 animate-fade-in printing-modal-container">
-          <div className="absolute inset-0" onClick={() => setShowDetails(false)}></div>
-          <div id="modal-extract" className="bg-slate-900 print:bg-white text-white print:text-black border border-slate-700 print:border-none rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh] animate-fade-up relative z-10 print-area">
+          <div className="absolute inset-0 no-print" onClick={() => setShowDetails(false)}></div>
+          
+          <div id="modal-extract" className="printable-content bg-slate-900 print:bg-white text-white print:text-black border border-slate-700 print:border-none rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh] print:max-h-none print:overflow-visible animate-fade-up relative z-10 print-area">
+            
             <button onClick={() => setShowDetails(false)} className="absolute top-4 right-4 p-2 bg-slate-800 print:hidden rounded-full hover:bg-slate-700 text-slate-400 hover:text-white transition-colors no-print"><X size={24} /></button>
-            <div className="p-8 overflow-y-auto">
-              <div className="text-center mb-8 border-b border-slate-800 print:border-slate-200 pb-6">
-                <h2 className="text-2xl font-bold text-cyan-400 print:text-blue-900 font-exo mb-1">Hospital José Leite da Silva</h2>
-                <p className="text-slate-400 print:text-slate-600 text-sm">Relatório Analítico de Fornecedor</p>
-                <p className="text-slate-500 print:text-slate-500 text-xs mt-2">Gerado em: {new Date().toLocaleDateString()}</p>
+            
+            <div className="p-8 overflow-y-auto print:overflow-visible custom-scrollbar">
+              
+              <div className="text-center mb-8 border-b border-slate-800 print:border-slate-300 pb-6">
+                <h2 className="text-2xl font-bold text-cyan-400 print:text-black font-exo mb-1">Hospital José Leite da Silva</h2>
+                <p className="text-slate-400 print:text-gray-600 text-sm">Relatório Analítico de Fornecedor</p>
+                <p className="text-slate-500 print:text-gray-500 text-xs mt-2">
+                    Gerado em: {new Date().toLocaleDateString()} | Ordenação: Data Antiga → Recente
+                </p>
               </div>
+
               <div className="bg-slate-950 print:bg-white p-6 rounded-xl border border-slate-800 print:border-none mb-8 print:p-0 print:mb-4">
                 <h3 className="text-xl font-bold text-white print:text-black">{selectedCompany.nome}</h3>
-                <div className="flex gap-6 mt-2 text-sm text-slate-400 print:text-black"><p><strong>CNPJ:</strong> {selectedCompany.cnpj}</p><p><strong>Licitação:</strong> {selectedCompany.licitacao ? 'Sim' : 'Não'}</p></div>
-                <div className="mt-4"><p className="text-xs font-bold text-slate-500 print:text-black uppercase mb-1">Ramos de Atividade:</p><div className="flex flex-wrap gap-1 print:block">{selectedCompany.tipo?.map((t, i) => (<span key={i} className="text-xs bg-slate-800 print:bg-white border border-slate-700 print:border-slate-300 px-2 py-0.5 rounded text-slate-300 print:text-black print:p-0 print:mr-2 print:text-sm">{t}</span>))}</div></div>
+                <div className="flex gap-6 mt-2 text-sm text-slate-400 print:text-black">
+                    <p><strong>CNPJ:</strong> {selectedCompany.cnpj}</p>
+                    <p><strong>Licitação:</strong> {selectedCompany.licitacao ? 'Sim' : 'Não'}</p>
+                </div>
+                <div className="mt-4">
+                    <p className="text-xs font-bold text-slate-500 print:text-black uppercase mb-1">Ramos de Atividade:</p>
+                    <div className="flex flex-wrap gap-1 print:block">
+                        {selectedCompany.tipo?.map((t, i) => (
+                            <span key={i} className="text-xs bg-slate-800 print:bg-white border border-slate-700 print:border-slate-300 px-2 py-0.5 rounded text-slate-300 print:text-black print:p-0 print:mr-2 print:text-sm">{t}</span>
+                        ))}
+                    </div>
+                </div>
               </div>
-              <table className="w-full text-left text-sm print:text-xs">
-                <thead className="bg-slate-950 print:bg-white text-slate-400 print:text-black uppercase text-xs font-bold border-b border-slate-700 print:border-black"><tr><th className="p-3 pl-0 print:p-1">Data</th><th className="p-3 print:p-1">Tipo</th><th className="p-3 print:p-1">NF</th><th className="p-3 print:p-1">Descrição</th><th className="p-3 pr-0 text-right print:p-1">Valor</th></tr></thead>
-                <tbody className="divide-y divide-slate-800 print:divide-black text-slate-300 print:text-black">
+
+              <table className="w-full text-left text-sm print:text-xs border-collapse">
+                <thead className="bg-slate-950 print:bg-white text-slate-400 print:text-black uppercase text-xs font-bold border-b border-slate-700 print:border-black">
+                    <tr>
+                        <th className="p-3 pl-0 print:p-2 border-b print:border-black">Data</th>
+                        <th className="p-3 print:p-2 border-b print:border-black">Tipo</th>
+                        <th className="p-3 print:p-2 border-b print:border-black">NF</th>
+                        <th className="p-3 print:p-2 border-b print:border-black">Descrição</th>
+                        <th className="p-3 pr-0 text-right print:p-2 border-b print:border-black">Valor</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800 print:divide-gray-300 text-slate-300 print:text-black">
                   {detailsTransactions.length > 0 ? detailsTransactions.map((t) => (
-                    <tr key={t.id}><td className="p-3 pl-0 text-slate-500 print:text-black">{new Date(t.data).toLocaleDateString('pt-BR')}</td><td className="p-3 font-bold print:p-1"><span className={t.tipo === 'entrada' ? 'text-green-500 print:text-black' : 'text-red-500 print:text-black'}>{t.tipo.toUpperCase()}</span></td><td className="p-3 print:p-1">{t.nf || '-'}</td><td className="p-3 print:p-1">{t.descricao}</td><td className="p-3 text-right font-mono font-medium print:p-1">{t.tipo === 'saida' ? '-' : '+'} {formatMoney(parseFloat(t.valor))}</td></tr>
-                  )) : (<tr><td colSpan="5" className="p-6 text-center text-slate-500 print:text-black italic">Nenhuma movimentação registrada.</td></tr>)}
+                    <tr key={t.id} className="break-inside-avoid">
+                        <td className="p-3 pl-0 text-slate-500 print:text-black whitespace-nowrap">
+                            {new Date(t.data_entrada || t.data).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}
+                        </td>
+                        <td className="p-3 font-bold print:p-1">
+                            <span className={`print-font-bold ${t.tipo === 'entrada' ? 'text-green-500 print:text-black' : 'text-red-500 print:text-black'}`}>
+                                {t.tipo.toUpperCase()}
+                            </span>
+                        </td>
+                        <td className="p-3 print:p-1">{t.nf || '-'}</td>
+                        <td className="p-3 print:p-1">{t.descricao}</td>
+                        <td className="p-3 text-right font-mono font-medium print:p-1">
+                            {t.tipo === 'saida' ? '-' : '+'} {formatMoney(parseFloat(t.valor))}
+                        </td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan="5" className="p-6 text-center text-slate-500 print:text-black italic">Nenhuma movimentação registrada.</td></tr>
+                  )}
                 </tbody>
               </table>
-              <div className="mt-8 flex justify-end border-t border-slate-800 print:border-black pt-4"><div className="text-right"><p className="text-slate-500 print:text-black text-sm mb-1 font-bold">Saldo Atual (A Pagar)</p><h3 className={`text-3xl font-bold font-exo ${calculateTotalDetails() > 0 ? 'text-red-400 print:text-black' : 'text-green-400 print:text-black'}`}>{formatMoney(calculateTotalDetails())}</h3></div></div>
+
+              <div className="mt-8 flex justify-end border-t border-slate-800 print:border-black pt-4 break-inside-avoid">
+                <div className="text-right">
+                    <p className="text-slate-500 print:text-black text-sm mb-1 font-bold">Saldo Atual (A Pagar)</p>
+                    <h3 className={`text-3xl font-bold font-exo ${calculateTotalDetails(detailsTransactions) > 0 ? 'text-red-400 print:text-black' : 'text-green-400 print:text-black'}`}>
+                        {formatMoney(calculateTotalDetails(detailsTransactions))}
+                    </h3>
+                </div>
+              </div>
+
             </div>
-            <div className="p-6 border-t border-slate-800 bg-slate-900/50 rounded-b-2xl flex justify-end no-print"><button onClick={() => window.print()} className="flex items-center gap-2 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors"><Printer size={20} /> Imprimir Relatório</button></div>
+            
+            <div className="p-6 border-t border-slate-800 bg-slate-900/50 rounded-b-2xl flex justify-end no-print">
+                <button onClick={() => window.print()} className="flex items-center gap-2 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">
+                    <Printer size={20} /> Imprimir Relatório
+                </button>
+            </div>
+
           </div>
         </div>
       )}
 
       <div className="h-full w-full overflow-y-auto p-4 sm:p-8 relative animate-fade-up">
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 no-print">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold font-exo text-white flex items-center gap-2">
               <Building2 className="text-cyan-400 w-8 h-8" /> Gestão de Empresas
@@ -276,7 +342,7 @@ export default function Empresas() {
           </button>
         </header>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden no-print">
           {loading ? (
             <div className="p-8 text-center text-slate-500 flex justify-center items-center gap-2"><Loader2 className="animate-spin" /> Carregando...</div>
           ) : companies.length === 0 ? (
@@ -302,7 +368,7 @@ export default function Empresas() {
                       </td>
                       <td className="p-4 max-w-[200px]">
                         <div className="flex flex-wrap gap-1">
-                          {c.tipo && c.tipo.length > 0 ? c.tipo.map((tag, i) => (<span key={i} className="text-[10px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/20 truncate">{tag}</span>)) : <span className="text-slate-600 italic">--</span>}
+                          {Array.isArray(c.tipo) && c.tipo.length > 0 ? c.tipo.map((tag, i) => (<span key={i} className="text-[10px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/20 truncate">{tag}</span>)) : <span className="text-slate-600 italic">--</span>}
                         </div>
                       </td>
                       <td className="p-4 text-center">
@@ -310,7 +376,7 @@ export default function Empresas() {
                       </td>
                       <td className="p-4 max-w-[200px]">
                         <div className="flex flex-wrap gap-1">
-                          {c.emendas && c.emendas.length > 0 ? c.emendas.map((eme, i) => (<span key={i} className="text-[10px] bg-yellow-900/30 text-yellow-500 px-1.5 py-0.5 rounded border border-yellow-500/20 truncate">{eme}</span>)) : <span className="text-slate-600 italic">--</span>}
+                          {Array.isArray(c.emendas) && c.emendas.length > 0 ? c.emendas.map((eme, i) => (<span key={i} className="text-[10px] bg-yellow-900/30 text-yellow-500 px-1.5 py-0.5 rounded border border-yellow-500/20 truncate">{eme}</span>)) : <span className="text-slate-600 italic">--</span>}
                         </div>
                       </td>
                       <td className="p-4 text-right whitespace-nowrap">

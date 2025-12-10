@@ -8,49 +8,79 @@ body {
 
 @keyframes float { 0% { transform: translate(0, 0); } 100% { transform: translate(30px, 30px); } }
 .animate-float { animation: float 10s infinite alternate; }
+
 @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 .animate-fade-up { animation: fadeUp 0.5s ease-out forwards; }
+
 .glass-card { @apply bg-white/5 backdrop-blur-xl border border-white/20 shadow-2xl; }
 .glass-input { @apply w-full p-4 bg-black/20 border border-white/10 rounded-xl text-white outline-none focus:border-cyan-400 transition-all placeholder-slate-400; }
 .btn-gradient { @apply w-full p-4 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl font-bold text-white hover:translate-y-[-2px] hover:shadow-lg hover:shadow-cyan-500/30 transition-all duration-300; }
+
 .custom-scrollbar::-webkit-scrollbar { width: 8px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: rgba(30, 41, 59, 0.5); }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.8); border-radius: 4px; }
 
 
 @media print {
-  body * {
-    visibility: hidden;
+  
+  aside, header, button, nav, .no-print {
+    display: none !important;
   }
 
-  #modal-extract, #modal-extract *, #report-section, #report-section * {
-    visibility: visible;
-  }
-
-  #modal-extract {
-    position: absolute; left: 0; top: 0; width: 100% !important;
-    margin: 0 !important; padding: 0 !important;
-    background-color: white !important; color: black !important;
-    border: none !important; box-shadow: none !important;
+  html, body, #root, .flex, .h-screen, .overflow-hidden, .overflow-y-auto, .fixed {
+    height: auto !important;
+    width: 100% !important;
     overflow: visible !important;
-  }
-
-  #report-section {
-    position: absolute; left: 0; top: 0; width: 100% !important;
-    margin: 0 !important; padding: 20px !important;
-    background-color: white !important; color: black !important;
-    border: none !important; box-shadow: none !important;
-    overflow: visible !important;
-  }
-
-  #modal-extract *, #report-section * {
+    position: static !important; 
+    display: block !important;   
+    background-color: white !important;
     color: black !important;
-    background-color: transparent !important;
-    border-color: #ddd !important;
   }
 
-  .print-text-green { color: green !important; }
-  .print-text-red { color: red !important; }
+  @page {
+    size: A4;
+    margin: 15mm 15mm 15mm 15mm; 
+  }
 
-  .no-print { display: none !important; }
+
+  .printable-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  h1, h2, h3, h4, p, span, div {
+    color: black !important;
+    text-shadow: none !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 10pt !important;
+  }
+
+  thead {
+    background-color: #f3f4f6 !important;
+    display: table-header-group; 
+  }
+
+  tr {
+    page-break-inside: avoid; 
+  }
+
+  th, td {
+    border: 1px solid #cbd5e1 !important; 
+    padding: 6px 10px !important;
+    color: black !important;
+  }
+
+  .text-green-500, .text-green-400 { color: #166534 !important; font-weight: bold; } 
+  .text-red-500, .text-red-400 { color: #991b1b !important; font-weight: bold; }     
+  .text-yellow-500, .text-yellow-400 { color: #854d0e !important; font-weight: bold; } 
 }

@@ -34,7 +34,7 @@ export default function Comparativo() {
     } catch (error) {
       console.error("Erro ao carregar dados", error);
     } finally {
-      setTimeout(() => setLoading(false), 500);
+      setLoading(false);
     }
   };
 
@@ -45,7 +45,7 @@ export default function Comparativo() {
   }, [selectedCompanyId, filterDate, filterType, allTransactions, loading]);
 
   const applyFilters = () => {
-    let result = allTransactions;
+    let result = [...allTransactions];
 
     if (selectedCompanyId !== 'all') {
       result = result.filter(t => t.empresa === parseInt(selectedCompanyId));
@@ -56,6 +56,12 @@ export default function Comparativo() {
     if (filterType !== 'all') {
       result = result.filter(t => t.tipo === filterType);
     }
+
+    result.sort((a, b) => {
+        const dateA = new Date(a.data_entrada || a.data_saida || a.data);
+        const dateB = new Date(b.data_entrada || b.data_saida || b.data);
+        return dateA - dateB; 
+    });
 
     setFilteredTransactions(result);
     calculateStats(result);
@@ -75,8 +81,7 @@ export default function Comparativo() {
   
   const formatDate = (dateString) => {
     if (!dateString) return '-';
-    const [year, month, day] = dateString.split('-');
-    return `${day}/${month}/${year}`;
+    return new Date(dateString).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
   };
 
   const getClassificacao = (t) => {
@@ -84,7 +89,7 @@ export default function Comparativo() {
       if (!t.tipo_material) return 'Geral';
       return t.tipo_material.charAt(0).toUpperCase() + t.tipo_material.slice(1);
     } else {
-      const match = t.descricao.match(/^\[(.*?)\]/);
+      const match = t.descricao ? t.descricao.match(/^\[(.*?)\]/) : null;
       return match ? match[1] : 'Saída Diversa';
     }
   };
@@ -101,6 +106,7 @@ export default function Comparativo() {
 
   return (
     <div className="h-full w-full overflow-y-auto p-4 sm:p-8 relative animate-fade-up">
+        
         <header className="mb-8 no-print">
           <h2 className="text-2xl sm:text-3xl font-bold font-exo text-white flex items-center gap-2">
             <Scale className="text-cyan-400 w-8 h-8" /> Análise Financeira
@@ -138,14 +144,15 @@ export default function Comparativo() {
             <p className="mt-4 text-slate-400 font-medium animate-pulse">Processando dados financeiros...</p>
           </div>
         ) : (
-          <div id="report-section">
+          <div id="report-section" className="printable-content">
             
             <div className="hidden print:block text-center mb-8 border-b border-black pb-4">
               <h1 className="text-2xl font-bold uppercase">Hospital José Leite da Silva</h1>
               <p className="text-sm">Relatório Financeiro Analítico</p>
-              <p className="text-xs mt-2">
+              <p className="text-xs mt-2 text-gray-500">
                 <strong>Filtro:</strong> {selectedCompanyId === 'all' ? 'Todos os Fornecedores' : companies.find(c => c.id == selectedCompanyId)?.nome} | 
-                {filterDate ? ` Período: ${filterDate}` : ' Todo o Período'}
+                {filterDate ? ` Período: ${filterDate}` : ' Todo o Período'} |
+                Ordenação: Data Antiga → Recente
               </p>
             </div>
 
@@ -170,24 +177,28 @@ export default function Comparativo() {
                 <div className="p-4 border-b border-slate-800 print:border-black bg-slate-900/50 print:bg-white">
                   <h3 className="font-bold text-white print:text-black">Detalhamento das Movimentações</h3>
                 </div>
-                
-                <div className="max-h-[500px] print:max-h-none overflow-y-auto custom-scrollbar">
-                  <table className="w-full text-left text-sm print:text-xs">
-                    <thead className="bg-slate-950 print:bg-white text-slate-400 print:text-black uppercase text-xs sticky top-0 border-b print:border-black">
+
+                <div className="max-h-[500px] print:max-h-none overflow-y-auto print:overflow-visible custom-scrollbar">
+                  <table className="w-full text-left text-sm print:text-xs border-collapse">
+                    <thead className="bg-slate-950 print:bg-white text-slate-400 print:text-black uppercase text-xs sticky top-0 print:static border-b print:border-black">
                       <tr>
-                        <th className="p-4 print:p-2">Data</th>
-                        <th className="p-4 print:p-2">Empresa</th>
-                        <th className="p-4 print:p-2">Tipo</th>
-                        <th className="p-4 print:p-2">Classificação / Setor</th>
-                        <th className="p-4 print:p-2">NF</th>
-                        <th className="p-4 text-right print:p-2">Valor</th>
+                        <th className="p-4 print:p-2 border-b print:border-black">Data</th>
+                        <th className="p-4 print:p-2 border-b print:border-black">Empresa</th>
+                        <th className="p-4 print:p-2 border-b print:border-black">Tipo</th>
+                        <th className="p-4 print:p-2 border-b print:border-black">Classificação / Setor</th>
+                        <th className="p-4 print:p-2 border-b print:border-black">NF</th>
+                        <th className="p-4 text-right print:p-2 border-b print:border-black">Valor</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800 print:divide-black text-slate-300 print:text-black">
+                    <tbody className="divide-y divide-slate-800 print:divide-gray-300 text-slate-300 print:text-black">
                       {filteredTransactions.map((t) => (
-                        <tr key={t.id} className="hover:bg-slate-800/50 print:hover:bg-white">
-                          <td className="p-4 print:p-2 text-slate-400 print:text-black">{formatDate(t.data)}</td>
-                          <td className="p-4 print:p-2 font-bold truncate max-w-[120px]">{t.nome_empresa}</td>
+                        <tr key={t.id} className="hover:bg-slate-800/50 print:hover:bg-transparent break-inside-avoid">
+                          <td className="p-4 print:p-2 text-slate-400 print:text-black whitespace-nowrap">
+                            {formatDate(t.data_entrada || t.data)}
+                          </td>
+                          <td className="p-4 print:p-2 font-bold truncate max-w-[120px] print:max-w-none print:whitespace-normal">
+                            {t.nome_empresa}
+                          </td>
                           <td className="p-4 print:p-2 font-bold">
                             <span className={`print-font-bold ${t.tipo === 'entrada' ? 'text-red-400 print:text-black' : 'text-green-400 print:text-black'}`}>
                               {t.tipo === 'entrada' ? 'COMPRA' : 'PAGO'}

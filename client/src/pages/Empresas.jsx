@@ -135,7 +135,6 @@ export default function Empresas() {
     }
   };
 
-  
   const getCompanyTransactions = () => {
     if (!selectedCompany) return [];
     
@@ -329,7 +328,7 @@ export default function Empresas() {
         </div>
       )}
 
-      <div className="h-full w-full overflow-y-auto p-4 sm:p-8 relative animate-fade-up">
+      <div className={`h-full w-full overflow-y-auto p-4 sm:p-8 relative animate-fade-up ${showDetails ? 'no-print' : ''}`}>
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 no-print">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold font-exo text-white flex items-center gap-2">

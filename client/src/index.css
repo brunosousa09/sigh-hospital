@@ -20,10 +20,8 @@ body {
 .custom-scrollbar::-webkit-scrollbar-track { background: rgba(30, 41, 59, 0.5); }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.8); border-radius: 4px; }
 
-
 @media print {
-  
-  aside, header, button, nav, .no-print {
+  aside, header, nav, .sidebar, button, .no-print, ::-webkit-scrollbar, [class*="sidebar"] {
     display: none !important;
   }
 
@@ -31,17 +29,18 @@ body {
     height: auto !important;
     width: 100% !important;
     overflow: visible !important;
-    position: static !important; 
-    display: block !important;   
+    position: static !important;
+    display: block !important;
     background-color: white !important;
     color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   @page {
     size: A4;
-    margin: 15mm 15mm 15mm 15mm; 
+    margin: 10mm 15mm;
   }
-
 
   .printable-content {
     width: 100% !important;
@@ -52,6 +51,10 @@ body {
     box-shadow: none !important;
     background: white !important;
     color: black !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 9999;
   }
 
   h1, h2, h3, h4, p, span, div {
@@ -67,16 +70,16 @@ body {
 
   thead {
     background-color: #f3f4f6 !important;
-    display: table-header-group; 
+    display: table-header-group;
   }
 
   tr {
-    page-break-inside: avoid; 
+    page-break-inside: avoid;
   }
 
   th, td {
-    border: 1px solid #cbd5e1 !important; 
-    padding: 6px 10px !important;
+    border: 1px solid #cbd5e1 !important;
+    padding: 6px 8px !important;
     color: black !important;
   }
 

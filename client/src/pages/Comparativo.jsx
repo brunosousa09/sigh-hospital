@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Scale, Building2, TrendingDown, TrendingUp, Wallet, Printer, Calendar, Loader2 } from 'lucide-react';
+import { Scale, Building2, Printer, Calendar, Loader2, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 
@@ -57,6 +57,7 @@ export default function Comparativo() {
       result = result.filter(t => t.tipo === filterType);
     }
 
+    // Ordenação: Antiga -> Recente
     result.sort((a, b) => {
         const dateA = new Date(a.data_entrada || a.data_saida || a.data);
         const dateB = new Date(b.data_entrada || b.data_saida || b.data);
@@ -78,20 +79,11 @@ export default function Comparativo() {
   };
 
   const formatMoney = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
-  };
-
+  const formatDate = (ds) => ds ? new Date(ds).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '-';
   const getClassificacao = (t) => {
-    if (t.tipo === 'entrada') {
-      if (!t.tipo_material) return 'Geral';
-      return t.tipo_material.charAt(0).toUpperCase() + t.tipo_material.slice(1);
-    } else {
-      const match = t.descricao ? t.descricao.match(/^\[(.*?)\]/) : null;
-      return match ? match[1] : 'Saída Diversa';
-    }
+    if (t.tipo === 'entrada') return t.tipo_material ? (t.tipo_material.charAt(0).toUpperCase() + t.tipo_material.slice(1)) : 'Geral';
+    const match = t.descricao ? t.descricao.match(/^\[(.*?)\]/) : null;
+    return match ? match[1] : 'Saída Diversa';
   };
 
   const chartData = {
@@ -105,88 +97,85 @@ export default function Comparativo() {
   };
 
   return (
-    <div className="h-full w-full overflow-y-auto p-4 sm:p-8 relative animate-fade-up">
+    <div className="h-full w-full overflow-y-auto p-4 sm:p-8 animate-fade-up">
         
-        <header className="mb-8 no-print">
-          <h2 className="text-2xl sm:text-3xl font-bold font-exo text-white flex items-center gap-2">
-            <Scale className="text-cyan-400 w-8 h-8" /> Análise Financeira
-          </h2>
-          <p className="text-slate-400 text-sm">Relatórios gerenciais e comparativos</p>
-        </header>
+        <div className="no-print">
+            <header className="mb-8">
+              <h2 className="text-2xl sm:text-3xl font-bold font-exo text-white flex items-center gap-2">
+                <Scale className="text-cyan-400 w-8 h-8" /> Análise Financeira
+              </h2>
+              <p className="text-slate-400 text-sm">Relatórios gerenciais e comparativos</p>
+            </header>
 
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-lg mb-8 no-print">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div className="md:col-span-2">
-              <label className="text-xs text-slate-400 font-bold uppercase mb-2 flex items-center gap-2"><Building2 size={14} /> Fornecedor</label>
-              <select value={selectedCompanyId} onChange={(e) => setSelectedCompanyId(e.target.value)} disabled={loading} className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-cyan-400 outline-none cursor-pointer disabled:opacity-50">
-                <option value="all">🏢 Análise Geral (Todos os Fornecedores)</option>
-                {companies.map(c => (<option key={c.id} value={c.id}>{c.nome}</option>))}
-              </select>
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-lg mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div className="md:col-span-2">
+                  <label className="text-xs text-slate-400 font-bold uppercase mb-2 flex items-center gap-2"><Building2 size={14} /> Fornecedor</label>
+                  <select value={selectedCompanyId} onChange={(e) => setSelectedCompanyId(e.target.value)} disabled={loading} className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-cyan-400 outline-none cursor-pointer disabled:opacity-50">
+                    <option value="all">🏢 Análise Geral (Todos os Fornecedores)</option>
+                    {companies.map(c => (<option key={c.id} value={c.id}>{c.nome}</option>))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 font-bold uppercase mb-2 flex items-center gap-2"><Calendar size={14} /> Período</label>
+                  <input type="month" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} disabled={loading} className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-cyan-400 outline-none disabled:opacity-50"/>
+                </div>
+                <div>
+                  <button onClick={() => window.print()} disabled={loading} className="w-full bg-white text-slate-900 font-bold p-3 rounded-xl hover:bg-slate-200 transition-colors flex justify-center items-center gap-2 disabled:opacity-50">
+                    <Printer size={18} /> Imprimir
+                  </button>
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="text-xs text-slate-400 font-bold uppercase mb-2 flex items-center gap-2"><Calendar size={14} /> Período</label>
-              <input type="month" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} disabled={loading} className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-white focus:border-cyan-400 outline-none disabled:opacity-50"/>
-            </div>
-            <div>
-              <button onClick={() => window.print()} disabled={loading} className="w-full bg-white text-slate-900 font-bold p-3 rounded-xl hover:bg-slate-200 transition-colors flex justify-center items-center gap-2 disabled:opacity-50">
-                <Printer size={18} /> Imprimir
-              </button>
-            </div>
-          </div>
         </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center h-96">
-            <div className="relative">
-              <div className="absolute inset-0 bg-cyan-500 blur-xl opacity-20 rounded-full"></div>
-              <Loader2 size={64} className="text-cyan-400 animate-spin relative z-10" />
-            </div>
-            <p className="mt-4 text-slate-400 font-medium animate-pulse">Processando dados financeiros...</p>
+            <Loader2 size={64} className="text-cyan-400 animate-spin" />
+            <p className="mt-4 text-slate-400 font-medium">Processando dados...</p>
           </div>
         ) : (
-          <div id="report-section" className="printable-content">
+          <div className="printable-content">
             
             <div className="hidden print:block text-center mb-8 border-b border-black pb-4">
-              <h1 className="text-2xl font-bold uppercase">Hospital José Leite da Silva</h1>
-              <p className="text-sm">Relatório Financeiro Analítico</p>
-              <p className="text-xs mt-2 text-gray-500">
+              <h1 className="text-2xl font-bold uppercase">Relatório Financeiro Analítico</h1>
+              <p className="text-sm">Hospital José Leite da Silva</p>
+              <p className="text-xs mt-2 text-gray-600">
                 <strong>Filtro:</strong> {selectedCompanyId === 'all' ? 'Todos os Fornecedores' : companies.find(c => c.id == selectedCompanyId)?.nome} | 
-                {filterDate ? ` Período: ${filterDate}` : ' Todo o Período'} |
-                Ordenação: Data Antiga → Recente
+                {filterDate ? ` Período: ${filterDate}` : ' Todo o Período'}
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 print:grid-cols-3 print:gap-4">
-              <div className="p-6 bg-slate-900 print:bg-white border border-red-500/20 print:border-black rounded-2xl shadow-lg flex items-center justify-between">
-                <div><p className="text-slate-400 print:text-black text-sm mb-1 font-bold">Total Compras (Dívida)</p><h3 className="text-2xl font-bold text-red-400 print:text-black font-mono">{formatMoney(stats.totalIn)}</h3></div>
-                <div className="p-3 bg-red-500/10 rounded-full text-red-400 print:hidden"><TrendingDown size={24} /></div>
+              <div className="p-6 bg-slate-900 print:bg-white border border-red-500/20 print:border-black rounded-2xl shadow-lg">
+                <p className="text-slate-400 print:text-black text-sm mb-1 font-bold">Total Compras</p>
+                <h3 className="text-2xl font-bold text-red-400 print:text-black font-mono">{formatMoney(stats.totalIn)}</h3>
               </div>
-              <div className="p-6 bg-slate-900 print:bg-white border border-green-500/20 print:border-black rounded-2xl shadow-lg flex items-center justify-between">
-                <div><p className="text-slate-400 print:text-black text-sm mb-1 font-bold">Total Pagos (Baixas)</p><h3 className="text-2xl font-bold text-green-400 print:text-black font-mono">{formatMoney(stats.totalOut)}</h3></div>
-                <div className="p-3 bg-green-500/10 rounded-full text-green-400 print:hidden"><TrendingUp size={24} /></div>
+              <div className="p-6 bg-slate-900 print:bg-white border border-green-500/20 print:border-black rounded-2xl shadow-lg">
+                <p className="text-slate-400 print:text-black text-sm mb-1 font-bold">Total Pago</p>
+                <h3 className="text-2xl font-bold text-green-400 print:text-black font-mono">{formatMoney(stats.totalOut)}</h3>
               </div>
-              <div className="p-6 bg-slate-900 print:bg-white border border-slate-700 print:border-black rounded-2xl shadow-lg flex items-center justify-between">
-                <div><p className="text-slate-400 print:text-black text-sm mb-1 font-bold">Saldo Devedor Atual</p><h3 className={`text-2xl font-bold font-mono ${stats.balance > 0 ? 'text-red-500 print:text-black' : 'text-green-500 print:text-black'}`}>{formatMoney(stats.balance)}</h3></div>
-                <div className="p-3 bg-slate-800 rounded-full text-slate-300 print:hidden"><Wallet size={24} /></div>
+              <div className="p-6 bg-slate-900 print:bg-white border border-slate-700 print:border-black rounded-2xl shadow-lg">
+                <p className="text-slate-400 print:text-black text-sm mb-1 font-bold">Saldo Devedor</p>
+                <h3 className="text-2xl font-bold text-white print:text-black font-mono">{formatMoney(stats.balance)}</h3>
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print:block">
               
-              <div className="lg:col-span-2 bg-slate-900 print:bg-white border border-slate-800 print:border-none rounded-2xl overflow-hidden shadow-xl print:shadow-none">
+              <div className="lg:col-span-2 bg-slate-900 print:bg-white border border-slate-800 print:border-none rounded-2xl overflow-hidden shadow-xl print:shadow-none print:w-full">
                 <div className="p-4 border-b border-slate-800 print:border-black bg-slate-900/50 print:bg-white">
-                  <h3 className="font-bold text-white print:text-black">Detalhamento das Movimentações</h3>
+                  <h3 className="font-bold text-white print:text-black">Detalhamento</h3>
                 </div>
 
                 <div className="max-h-[500px] print:max-h-none overflow-y-auto print:overflow-visible custom-scrollbar">
                   <table className="w-full text-left text-sm print:text-xs border-collapse">
-                    <thead className="bg-slate-950 print:bg-white text-slate-400 print:text-black uppercase text-xs sticky top-0 print:static border-b print:border-black">
+                    <thead className="bg-slate-950 print:bg-gray-100 text-slate-400 print:text-black uppercase text-xs sticky top-0 print:static border-b print:border-black">
                       <tr>
                         <th className="p-4 print:p-2 border-b print:border-black">Data</th>
                         <th className="p-4 print:p-2 border-b print:border-black">Empresa</th>
                         <th className="p-4 print:p-2 border-b print:border-black">Tipo</th>
-                        <th className="p-4 print:p-2 border-b print:border-black">Classificação / Setor</th>
-                        <th className="p-4 print:p-2 border-b print:border-black">NF</th>
+                        <th className="p-4 print:p-2 border-b print:border-black">NF/Desc</th>
                         <th className="p-4 text-right print:p-2 border-b print:border-black">Valor</th>
                       </tr>
                     </thead>
@@ -201,29 +190,24 @@ export default function Comparativo() {
                           </td>
                           <td className="p-4 print:p-2 font-bold">
                             <span className={`print-font-bold ${t.tipo === 'entrada' ? 'text-red-400 print:text-black' : 'text-green-400 print:text-black'}`}>
-                              {t.tipo === 'entrada' ? 'COMPRA' : 'PAGO'}
+                              {t.tipo === 'entrada' ? 'COMPRA' : 'BAIXA'}
                             </span>
                           </td>
-                          
-                          <td className="p-4 print:p-2 font-medium text-cyan-300 print:text-black">
-                            {getClassificacao(t)}
-                          </td>
-
-                          <td className="p-4 print:p-2 text-slate-300 print:text-black">{t.nf || '-'}</td>
+                          <td className="p-4 print:p-2 text-slate-300 print:text-black">{t.nf || t.descricao}</td>
                           <td className="p-4 text-right font-mono font-medium print:p-2">
                             {formatMoney(parseFloat(t.valor))}
                           </td>
                         </tr>
                       ))}
                       {filteredTransactions.length === 0 && (
-                        <tr><td colSpan="6" className="p-8 text-center italic text-slate-500 print:text-black">Nenhum dado para este filtro.</td></tr>
+                        <tr><td colSpan="5" className="p-8 text-center italic text-slate-500 print:text-black">Nenhum dado para este filtro.</td></tr>
                       )}
                     </tbody>
                   </table>
                 </div>
               </div>
 
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col items-center justify-center print:hidden">
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col items-center justify-center no-print">
                 <h3 className="font-bold text-white mb-6">Proporção Visual</h3>
                 <div className="w-full max-w-[250px]">
                   <Doughnut data={chartData} options={{plugins:{legend:{position:'bottom', labels:{color:'#94a3b8'}}}}} />

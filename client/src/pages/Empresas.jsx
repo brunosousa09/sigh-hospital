@@ -146,7 +146,7 @@ export default function Empresas() {
   return (
     <>
       {notification.show && (
-        <div className="fixed bottom-6 right-6 z-[100000] flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl backdrop-blur-md border bg-slate-800 text-white border-slate-700 animate-fade-up print:hidden">
+        <div className="fixed bottom-6 right-6 z-[100000] flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl backdrop-blur-md border bg-slate-800 text-white border-slate-700 animate-fade-up">
           {notification.type === 'success' ? <CheckCircle2 size={24} className="text-green-400" /> : <AlertTriangle size={24} className="text-red-400" />}
           <div><h4 className="font-bold text-sm">{notification.type === 'success' ? 'Sucesso' : 'Atenção'}</h4><p className="text-xs opacity-90">{notification.message}</p></div>
           <button onClick={() => setNotification({...notification, show: false})} className="ml-4 hover:opacity-70"><X size={16} /></button>
@@ -154,7 +154,7 @@ export default function Empresas() {
       )}
 
       {showDeleteModal && (
-        <div className="fixed inset-0 z-[99999] h-screen w-screen flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in print:hidden">
+        <div className="fixed inset-0 z-[99999] h-screen w-screen flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
           <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center animate-fade-up relative z-10">
             <h3 className="text-xl font-bold text-white mb-2">Excluir Empresa?</h3>
             <div className="flex gap-3 mt-4">
@@ -166,7 +166,7 @@ export default function Empresas() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 z-[99999] h-screen w-screen flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in print:hidden">
+        <div className="fixed inset-0 z-[99999] h-screen w-screen flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
           <div className="absolute inset-0" onClick={() => !saving && setShowModal(false)}></div>
           <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-[95%] sm:w-full max-w-2xl flex flex-col max-h-[90vh] animate-fade-up relative z-10">
             <div className="flex justify-between items-center p-6 border-b border-slate-800">
@@ -222,14 +222,14 @@ export default function Empresas() {
       )}
 
       {showDetails && selectedCompany && (
-        <div className="fixed inset-0 z-[99999] h-screen w-screen flex items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4 animate-fade-in printing-modal-container">
-          <div className="absolute inset-0 no-print" onClick={() => setShowDetails(false)}></div>
+        <div className="fixed inset-0 z-[99999] h-screen w-screen flex items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="absolute inset-0" onClick={() => setShowDetails(false)}></div>
           
-          <div id="modal-extract" className="printable-content bg-slate-900 print:bg-white text-white print:text-black border border-slate-700 print:border-none rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh] print:max-h-none print:overflow-visible animate-fade-up relative z-10 print-area">
+          <div id="print-area" className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh] animate-fade-up relative z-10">
             
-            <button onClick={() => setShowDetails(false)} className="absolute top-4 right-4 p-2 bg-slate-800 print:hidden rounded-full hover:bg-slate-700 text-slate-400 hover:text-white transition-colors no-print"><X size={24} /></button>
+            <button onClick={() => setShowDetails(false)} className="absolute top-4 right-4 p-2 bg-slate-800 rounded-full hover:bg-slate-700 text-slate-400 hover:text-white transition-colors no-print"><X size={24} /></button>
             
-            <div className="p-8 flex-1 overflow-y-auto custom-scrollbar print:overflow-visible">
+            <div className="p-8 flex-1 overflow-y-auto custom-scrollbar">
                <div className="text-center mb-6 border-b border-white/10 print:border-black pb-4">
                  <h1 className="text-2xl font-bold text-white print:text-black">Hospital José Leite da Silva</h1>
                  <p className="text-slate-400 print:text-black">Extrato do Fornecedor</p>
@@ -264,14 +264,16 @@ export default function Empresas() {
             </div>
 
             <div className="p-6 border-t border-slate-800 bg-slate-900/50 rounded-b-2xl flex justify-end flex-shrink-0 no-print">
-               <button onClick={() => window.print()} className="bg-white text-black px-6 py-2 rounded-lg font-bold flex gap-2"><Printer size={20}/> Imprimir Relatório</button>
+               <button onClick={() => window.print()} className="flex items-center gap-2 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">
+                   <Printer size={20} /> Imprimir Relatório
+               </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className={`h-full w-full overflow-y-auto p-4 sm:p-8 relative animate-fade-up ${showDetails ? 'print:hidden' : ''}`}>
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 no-print">
+      <div className="h-full w-full overflow-y-auto p-4 sm:p-8 relative animate-fade-up">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold font-exo text-white flex items-center gap-2">
               <Building2 className="text-cyan-400 w-8 h-8" /> Gestão de Empresas
@@ -283,7 +285,7 @@ export default function Empresas() {
           </button>
         </header>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden no-print">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
            <table className="w-full text-left">
              <thead className="bg-slate-950 text-slate-400 uppercase text-xs">
                <tr><th className="p-4">Empresa</th><th className="p-4 text-center">Licitação</th><th className="p-4 text-right">Ações</th></tr>

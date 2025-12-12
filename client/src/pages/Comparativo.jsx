@@ -57,7 +57,6 @@ export default function Comparativo() {
       result = result.filter(t => t.tipo === filterType);
     }
 
-    // ORDENAÇÃO: Data Antiga -> Data Recente
     result.sort((a, b) => {
         const dateA = new Date(a.data_entrada || a.data_saida || a.data);
         const dateB = new Date(b.data_entrada || b.data_saida || b.data);
@@ -82,7 +81,6 @@ export default function Comparativo() {
   
   const formatDate = (dateString) => {
     if (!dateString) return '-';
-    // Garante UTC para evitar problemas de fuso horário
     return new Date(dateString).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
   };
 
@@ -109,7 +107,7 @@ export default function Comparativo() {
   return (
     <div className="h-full w-full overflow-y-auto p-4 sm:p-8 relative animate-fade-up">
         
-        <div>
+        <div className="no-print">
             <header className="mb-8">
               <h2 className="text-2xl sm:text-3xl font-bold font-exo text-white flex items-center gap-2">
                 <Scale className="text-cyan-400 w-8 h-8" /> Análise Financeira
@@ -148,17 +146,16 @@ export default function Comparativo() {
             <p className="mt-4 text-slate-400 font-medium animate-pulse">Processando dados financeiros...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 pb-8">
             
-            <div id="print-area" className="lg:col-span-2">
+            <div id="print-area" className="xl:col-span-2 min-w-0">
               
               <div className="hidden print:block text-center mb-8 border-b border-black pb-4">
                 <h1 className="text-2xl font-bold uppercase">Hospital José Leite da Silva</h1>
                 <p className="text-sm">Relatório Financeiro Analítico</p>
                 <p className="text-xs mt-2 text-gray-500">
                   <strong>Filtro:</strong> {selectedCompanyId === 'all' ? 'Todos os Fornecedores' : companies.find(c => c.id == selectedCompanyId)?.nome} | 
-                  {filterDate ? ` Período: ${filterDate}` : ' Todo o Período'} |
-                  Ordenação: Data Antiga → Recente
+                  {filterDate ? ` Período: ${filterDate}` : ' Todo o Período'}
                 </p>
               </div>
 
@@ -182,16 +179,16 @@ export default function Comparativo() {
                   <h3 className="font-bold text-white print:text-black">Detalhamento das Movimentações</h3>
                 </div>
 
-                <div className="max-h-[500px] print:max-h-none overflow-y-auto print:overflow-visible custom-scrollbar table-responsive-wrapper">
+                <div className="overflow-x-auto w-full print:overflow-visible custom-scrollbar">
                   <table className="w-full text-left text-sm print:text-xs border-collapse">
-                    <thead className="bg-slate-950 print:bg-white text-slate-400 print:text-black uppercase text-xs sticky top-0 print:static border-b print:border-black">
+                    <thead className="bg-slate-950 print:bg-white text-slate-400 print:text-black uppercase text-xs sticky top-0 print:static border-b print:border-black z-10">
                       <tr>
-                        <th className="p-4 print:p-2 border-b print:border-black">Data</th>
-                        <th className="p-4 print:p-2 border-b print:border-black">Empresa</th>
+                        <th className="p-4 print:p-2 border-b print:border-black min-w-[100px]">Data</th>
+                        <th className="p-4 print:p-2 border-b print:border-black min-w-[150px]">Empresa</th>
                         <th className="p-4 print:p-2 border-b print:border-black">Tipo</th>
-                        <th className="p-4 print:p-2 border-b print:border-black">Classificação / Setor</th>
+                        <th className="p-4 print:p-2 border-b print:border-black">Classificação</th>
                         <th className="p-4 print:p-2 border-b print:border-black">NF</th>
-                        <th className="p-4 text-right print:p-2 border-b print:border-black">Valor</th>
+                        <th className="p-4 text-right print:p-2 border-b print:border-black min-w-[120px]">Valor</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800 print:divide-gray-300 text-slate-300 print:text-black">
@@ -200,7 +197,7 @@ export default function Comparativo() {
                           <td className="p-4 print:p-2 text-slate-400 print:text-black whitespace-nowrap">
                             {formatDate(t.data_entrada || t.data)}
                           </td>
-                          <td className="p-4 print:p-2 font-bold truncate max-w-[120px] print:max-w-none print:whitespace-normal">
+                          <td className="p-4 print:p-2 font-bold truncate max-w-[150px] print:max-w-none print:whitespace-normal">
                             {t.nome_empresa}
                           </td>
                           <td className="p-4 print:p-2 font-bold">
@@ -227,7 +224,8 @@ export default function Comparativo() {
                 </div>
               </div>
             </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col items-center justify-center h-fit">
+
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col items-center justify-center h-fit no-print">
               <h3 className="font-bold text-white mb-6">Proporção Visual</h3>
               <div className="w-full max-w-[250px]">
                 <Doughnut data={chartData} options={{plugins:{legend:{position:'bottom', labels:{color:'#94a3b8'}}}}} />

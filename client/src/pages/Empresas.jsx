@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import * as XLSX from 'xlsx'; // Biblioteca para Excel
+import * as XLSX from 'xlsx';
 import { 
   Building2, Plus, Trash2, Loader2, FileText, CheckCircle2, 
   XCircle, X, AlertTriangle, Pencil, Eye, Search, FileSpreadsheet,
-  MoreVertical, ShieldCheck, ShieldAlert
+  ShieldCheck, ShieldAlert, Printer
 } from 'lucide-react';
 
 export default function Empresas() {
@@ -12,20 +12,17 @@ export default function Empresas() {
   const [allTransactions, setAllTransactions] = useState([]); 
   const [loading, setLoading] = useState(true);
   
-  // Estados de Interface
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false); 
   const [showDetails, setShowDetails] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   
-  // Estados de Edição/Criação
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null); 
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [itemToDelete, setItemToDelete] = useState(null); 
 
-  // Campos do Formulário
   const [nome, setNome] = useState('');
   const [cnpj, setCnpj] = useState('');
   const [licitacao, setLicitacao] = useState('false');
@@ -56,48 +53,79 @@ export default function Empresas() {
       setAllTransactions(resTrans.data);
     } catch (error) { 
       console.error("Erro ao carregar dados", error);
-      showToast("Erro ao conectar com servidor", "error");
     } finally { 
       setLoading(false); 
     }
   };
 
   const exportToExcel = (company) => {
-    const companyTrans = allTransactions.filter(t => t.empresa === company.id);
-    
-    const dataToExport = companyTrans.map(t => ({
-      Data: new Date(t.data_entrada || t.data || t.data_saida).toLocaleDateString('pt-BR'),
-      Tipo: t.tipo.toUpperCase(),
-      Categoria: t.tipo_material || 'Diversos',
-      'Descrição/NF': t.nf || t.descricao || '-',
-      Valor: parseFloat(t.valor),
-      Status: t.status || 'Concluído'
-    }));
+    const companyTrans = allTransactions
+      .filter(t => t.empresa === company.id)
+      .sort((a, b) => new Date(a.data_entrada || a.data) - new Date(b.data_entrada || b.data));
 
-    const total = dataToExport.reduce((acc, curr) => curr.Tipo === 'ENTRADA' ? acc - curr.Valor : acc + curr.Valor, 0); // Exemplo simples de saldo
-    
-    const wb = XLSX.utils.book_new();
-    
-    const infoData = [
-      ["Razão Social", company.nome],
-      ["CNPJ", company.cnpj],
-      ["Licitação", company.licitacao ? "Sim" : "Não"],
-      ["Ramos", company.tipo?.join(", ") || "-"],
-      ["Emendas", company.emendas?.join(", ") || "-"]
+    const totalSaldo = companyTrans.reduce((acc, t) => t.tipo === 'entrada' ? acc - parseFloat(t.valor) : acc + parseFloat(t.valor), 0);
+
+    const wsData = [
+      // Cabeçalho Principal
+      ["RELATÓRIO FINANCEIRO DE FORNECEDOR"], 
+      ["Gerado em: " + new Date().toLocaleDateString('pt-BR') + " às " + new Date().toLocaleTimeString('pt-BR')],
+      [""], // Espaço
+
+      ["DADOS DO FORNECEDOR"],
+      ["Razão Social:", company.nome.toUpperCase()],
+      ["CNPJ:", company.cnpj],
+      ["Licitação Ativa:", company.licitacao ? "SIM" : "NÃO"],
+      ["Ramos de Atividade:", company.tipo?.join(", ") || "-"],
+      ["Emendas:", company.emendas?.join(", ") || "Nenhuma"],
+      [""], // Espaço
+      [""], // Espaço
+
+      ["DATA", "TIPO", "CLASSIFICAÇÃO", "DESCRIÇÃO / NF", "STATUS", "VALOR (R$)"],
     ];
-    const wsInfo = XLSX.utils.aoa_to_sheet([["DADOS CADASTRAIS"], ...infoData]);
-    XLSX.utils.book_append_sheet(wb, wsInfo, "Cadastro");
 
-    if(dataToExport.length > 0) {
-        const wsTrans = XLSX.utils.json_to_sheet(dataToExport);
-        XLSX.utils.book_append_sheet(wb, wsTrans, "Extrato Financeiro");
+    if (companyTrans.length > 0) {
+      companyTrans.forEach(t => {
+        wsData.push([
+          new Date(t.data_entrada || t.data || t.data_saida).toLocaleDateString('pt-BR'),
+          t.tipo.toUpperCase(),
+          (t.tipo_material || 'Diversos').toUpperCase(),
+          t.nf || t.descricao || '-',
+          (t.status || 'Concluído').toUpperCase(),
+          parseFloat(t.valor) 
+        ]);
+      });
     } else {
-        const wsTrans = XLSX.utils.aoa_to_sheet([["Nenhuma movimentação registrada"]]);
-        XLSX.utils.book_append_sheet(wb, wsTrans, "Extrato Financeiro");
+      wsData.push(["", "", "Nenhuma movimentação registrada no período.", "", "", ""]);
     }
 
-    XLSX.writeFile(wb, `Relatorio_${company.nome.replace(/ /g, '_')}.xlsx`);
-    showToast("Planilha gerada com sucesso!");
+    wsData.push([""]); 
+    wsData.push(["", "", "", "", "SALDO TOTAL:", totalSaldo]);
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    
+    // Largura das Colunas (wpx = pixels aproximados)
+    ws['!cols'] = [
+      { wch: 15 }, // A: Data
+      { wch: 12 }, // B: Tipo
+      { wch: 25 }, // C: Classificação
+      { wch: 30 }, // D: Descrição
+      { wch: 15 }, // E: Status
+      { wch: 18 }  // F: Valor
+    ];
+
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, // Título Principal (Linha 0, Col A até F)
+      { s: { r: 3, c: 0 }, e: { r: 3, c: 5 } }, // Subtítulo Dados (Linha 3, Col A até F)
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Relatório Analítico");
+    
+    const fileName = `Extrato_${company.nome.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 20)}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    
+    XLSX.writeFile(wb, fileName);
+    showToast("Relatório Excel gerado com sucesso!");
   };
 
   const addTag = (e, type) => {
@@ -156,12 +184,10 @@ export default function Empresas() {
     const temDivida = allTransactions.some(t => 
       t.empresa === id && t.tipo === 'entrada' && t.status === 'pendente'
     );
-
     if (temDivida) {
       showToast("Ação Bloqueada: Empresa possui pendências financeiras.", "error");
       return; 
     }
-
     setItemToDelete(id);
     setShowDeleteModal(true);
   };
@@ -193,130 +219,7 @@ export default function Empresas() {
   const totalDetails = detailsTransactions.reduce((acc, t) => t.tipo === 'entrada' ? acc + parseFloat(t.valor) : acc - parseFloat(t.valor), 0);
 
   return (
-    <div className="h-full w-full overflow-y-auto p-4 sm:p-8 relative animate-fade-up custom-scrollbar">
-      
-      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6">
-        <div>
-          <h2 className="text-3xl font-bold font-exo text-white flex items-center gap-3">
-            <Building2 className="text-cyan-400 w-9 h-9" /> Gestão de Fornecedores
-          </h2>
-          <p className="text-slate-400 mt-1">Gerencie contratos, licitações e histórico financeiro.</p>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-          <div className="relative group w-full sm:w-64">
-             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="text-slate-500 group-focus-within:text-cyan-400 transition-colors" size={18} />
-             </div>
-             <input 
-               type="text" 
-               placeholder="Buscar empresa ou CNPJ..." 
-               value={searchTerm}
-               onChange={(e) => setSearchTerm(e.target.value)}
-               className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-cyan-400 outline-none transition-all focus:ring-1 focus:ring-cyan-400/50 placeholder-slate-500"
-             />
-          </div>
-
-          <button onClick={openCreateModal} className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-3 rounded-xl font-bold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:scale-[1.02] transition-all active:scale-95">
-            <Plus size={20} /> Nova Empresa
-          </button>
-        </div>
-      </header>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl flex items-center gap-4">
-            <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400"><Building2 size={24}/></div>
-            <div><p className="text-slate-400 text-xs font-bold uppercase">Total Cadastrado</p><p className="text-2xl font-bold text-white">{companies.length}</p></div>
-        </div>
-        <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl flex items-center gap-4">
-            <div className="p-3 bg-green-500/10 rounded-xl text-green-400"><ShieldCheck size={24}/></div>
-            <div><p className="text-slate-400 text-xs font-bold uppercase">Com Licitação</p><p className="text-2xl font-bold text-white">{companies.filter(c => c.licitacao).length}</p></div>
-        </div>
-        <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl flex items-center gap-4">
-            <div className="p-3 bg-yellow-500/10 rounded-xl text-yellow-400"><FileText size={24}/></div>
-            <div><p className="text-slate-400 text-xs font-bold uppercase">Emendas Ativas</p><p className="text-2xl font-bold text-white">{companies.reduce((acc, c) => acc + (c.emendas ? c.emendas.length : 0), 0)}</p></div>
-        </div>
-      </div>
-
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
-        {loading ? (
-           <div className="p-12 flex flex-col items-center justify-center text-slate-500">
-               <Loader2 className="animate-spin mb-4 text-cyan-400" size={40} />
-               <p>Carregando base de dados...</p>
-           </div>
-        ) : filteredCompanies.length === 0 ? (
-           <div className="p-12 text-center text-slate-500">
-               <Building2 size={48} className="mx-auto mb-4 opacity-20" />
-               <p>Nenhuma empresa encontrada.</p>
-           </div>
-        ) : (
-           <div className="overflow-x-auto">
-             <table className="w-full text-left border-collapse">
-               <thead className="bg-slate-950 text-slate-400 uppercase text-xs font-bold tracking-wider">
-                 <tr>
-                   <th className="p-5 border-b border-slate-800">Empresa / CNPJ</th>
-                   <th className="p-5 border-b border-slate-800">Ramo de Atividade</th>
-                   <th className="p-5 border-b border-slate-800 text-center">Licitação</th>
-                   <th className="p-5 border-b border-slate-800 text-right">Ações</th>
-                 </tr>
-               </thead>
-               <tbody className="divide-y divide-slate-800 text-sm text-white">
-                 {filteredCompanies.map(c => (
-                   <tr key={c.id} className="hover:bg-slate-800/40 transition-colors group">
-                     <td className="p-5">
-                       <div className="flex items-center gap-4">
-                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-slate-300 font-bold border border-slate-600 shadow-inner">
-                            {c.nome.charAt(0).toUpperCase()}
-                         </div>
-                         <div>
-                            <p className="font-bold text-base group-hover:text-cyan-400 transition-colors">{c.nome}</p>
-                            <p className="text-xs text-slate-500 font-mono tracking-wide mt-0.5">{c.cnpj}</p>
-                         </div>
-                       </div>
-                     </td>
-                     <td className="p-5">
-                        <div className="flex flex-wrap gap-2">
-                           {c.tipo?.slice(0, 2).map((t, i) => (
-                              <span key={i} className="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs text-slate-300">{t}</span>
-                           ))}
-                           {c.tipo?.length > 2 && <span className="text-xs text-slate-500 self-center">+{c.tipo.length - 2}</span>}
-                        </div>
-                     </td>
-                     <td className="p-5 text-center">
-                       {c.licitacao ? (
-                         <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-xs font-bold">
-                            <ShieldCheck size={14} /> SIM
-                         </div>
-                       ) : (
-                         <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-800 border border-slate-700 rounded-full text-slate-500 text-xs font-bold">
-                            <ShieldAlert size={14} /> NÃO
-                         </div>
-                       )}
-                     </td>
-                     <td className="p-5">
-                       <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-60 group-hover:opacity-100 transition-opacity">
-                         
-                         <button 
-                            onClick={() => exportToExcel(c)} 
-                            className="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition-colors tooltip-trigger" 
-                            title="Baixar Planilha Excel"
-                         >
-                            <FileSpreadsheet size={18}/>
-                         </button>
-
-                         <button onClick={() => openDetailsModal(c)} className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors" title="Ver Extrato"><Eye size={18}/></button>
-                         <button onClick={() => openEditModal(c)} className="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded-lg transition-colors" title="Editar"><Pencil size={18}/></button>
-                         <button onClick={() => handleDeleteClick(c.id)} className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Excluir"><Trash2 size={18}/></button>
-                       </div>
-                     </td>
-                   </tr>
-                 ))}
-               </tbody>
-             </table>
-           </div>
-        )}
-      </div>
-
+    <>
       {notification.show && (
         <div className="fixed bottom-6 right-6 z-[100000] flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl backdrop-blur-md border bg-slate-800 text-white border-slate-700 animate-fade-up">
           {notification.type === 'success' ? <CheckCircle2 size={24} className="text-green-400" /> : <AlertTriangle size={24} className="text-red-400" />}
@@ -328,10 +231,8 @@ export default function Empresas() {
       {showDetails && selectedCompany && (
         <div className="fixed inset-0 z-[99999] h-screen w-screen flex items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4 animate-fade-in">
           <div className="absolute inset-0" onClick={() => setShowDetails(false)}></div>
-          
           <div id="print-area" className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh] animate-fade-up relative z-10">
             <button onClick={() => setShowDetails(false)} className="absolute top-4 right-4 p-2 bg-slate-800 rounded-full hover:bg-slate-700 text-slate-400 hover:text-white transition-colors no-print"><X size={24} /></button>
-            
             <div className="p-8 flex-1 overflow-y-auto custom-scrollbar">
                <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 border-b border-white/10 print:border-black pb-6 gap-4">
                   <div>
@@ -344,7 +245,6 @@ export default function Empresas() {
                     <div className="flex flex-wrap gap-2 justify-end">{selectedCompany.tipo?.map((t,i)=><span key={i} className="text-xs bg-slate-800 print:bg-transparent print:border print:border-black px-2 py-1 rounded text-white print:text-black uppercase font-bold">{t}</span>)}</div>
                   </div>
                </div>
-
                <div className="overflow-x-auto">
                  <table className="w-full text-left text-sm border-collapse">
                    <thead className="bg-slate-950 print:bg-gray-100 text-slate-400 print:text-black uppercase text-xs border-b print:border-black">
@@ -368,7 +268,6 @@ export default function Empresas() {
                    </tbody>
                  </table>
                </div>
-               
                <div className="mt-8 flex justify-end">
                  <div className="bg-slate-950 print:bg-transparent p-6 rounded-xl border border-slate-800 print:border-black min-w-[250px] text-right">
                     <p className="text-sm font-bold text-slate-500 print:text-black uppercase mb-1">Saldo Atual</p>
@@ -376,7 +275,6 @@ export default function Empresas() {
                  </div>
                </div>
             </div>
-
             <div className="p-6 border-t border-slate-800 bg-slate-900/50 rounded-b-2xl flex justify-between items-center no-print">
                <button onClick={() => setShowDetails(false)} className="text-slate-400 hover:text-white font-medium">Fechar</button>
                <button onClick={() => window.print()} className="flex items-center gap-2 bg-white text-slate-900 px-6 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors shadow-lg">
@@ -398,10 +296,8 @@ export default function Empresas() {
               </h3>
               <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-white transition-colors"><X size={24} /></button>
             </div>
-            
             <div className="p-6 overflow-y-auto custom-scrollbar bg-slate-900/50">
               <form id="formCompany" onSubmit={handleSave} className="space-y-6">
-                
                 <div className="space-y-4">
                     <h4 className="text-xs text-cyan-400 font-bold uppercase tracking-wider border-b border-slate-800 pb-2 mb-4">Dados Principais</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -418,10 +314,8 @@ export default function Empresas() {
                         </div>
                     </div>
                 </div>
-
                 <div className="space-y-4">
                    <h4 className="text-xs text-cyan-400 font-bold uppercase tracking-wider border-b border-slate-800 pb-2 mb-4">Classificação e Contrato</h4>
-                   
                    <div>
                       <label className="text-xs text-slate-400 font-bold uppercase mb-1 block">Possui Licitação Ativa?</label>
                       <div className="flex gap-4">
@@ -435,7 +329,6 @@ export default function Empresas() {
                           </label>
                       </div>
                    </div>
-
                    <div>
                       <label className="text-xs text-slate-400 font-bold uppercase mb-2 block">Ramos de Atividade <span className="text-red-500">*</span></label>
                       <div className="flex gap-2 mb-3">
@@ -447,7 +340,6 @@ export default function Empresas() {
                         {ramos.map((tag, i) => (<span key={i} className="bg-cyan-900/30 text-cyan-300 border border-cyan-500/30 px-3 py-1 rounded-full text-xs flex items-center gap-2 animate-fade-in">{tag} <button type="button" onClick={() => removeTag(i, 'ramo')} className="hover:text-white"><X size={12}/></button></span>))}
                       </div>
                    </div>
-
                    <div>
                       <label className="text-xs text-slate-400 font-bold uppercase mb-2 block">Emendas Parlamentares (Opcional)</label>
                       <div className="flex gap-2 mb-3">
@@ -459,10 +351,8 @@ export default function Empresas() {
                       </div>
                    </div>
                 </div>
-
               </form>
             </div>
-            
             <div className="p-6 border-t border-slate-800 bg-slate-900 rounded-b-2xl flex gap-3">
               <button onClick={() => setShowModal(false)} className="flex-1 p-3 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors font-medium">Cancelar</button>
               <button type="submit" form="formCompany" disabled={saving} className="flex-1 p-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
@@ -489,6 +379,121 @@ export default function Empresas() {
         </div>
       )}
 
-    </div>
+      <div className="h-full w-full overflow-y-auto p-4 sm:p-8 relative custom-scrollbar animate-fade-up">
+        
+        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6">
+          <div>
+            <h2 className="text-3xl font-bold font-exo text-white flex items-center gap-3">
+              <Building2 className="text-cyan-400 w-9 h-9" /> Gestão de Fornecedores
+            </h2>
+            <p className="text-slate-400 mt-1">Gerencie contratos, licitações e histórico financeiro.</p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+            <div className="relative group w-full sm:w-64">
+               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="text-slate-500 group-focus-within:text-cyan-400 transition-colors" size={18} />
+               </div>
+               <input 
+                 type="text" 
+                 placeholder="Buscar empresa ou CNPJ..." 
+                 value={searchTerm}
+                 onChange={(e) => setSearchTerm(e.target.value)}
+                 className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:border-cyan-400 outline-none transition-all focus:ring-1 focus:ring-cyan-400/50 placeholder-slate-500"
+               />
+            </div>
+            <button onClick={openCreateModal} className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-3 rounded-xl font-bold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:scale-[1.02] transition-all active:scale-95">
+              <Plus size={20} /> Nova Empresa
+            </button>
+          </div>
+        </header>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl flex items-center gap-4">
+              <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400"><Building2 size={24}/></div>
+              <div><p className="text-slate-400 text-xs font-bold uppercase">Total Cadastrado</p><p className="text-2xl font-bold text-white">{companies.length}</p></div>
+          </div>
+          <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl flex items-center gap-4">
+              <div className="p-3 bg-green-500/10 rounded-xl text-green-400"><ShieldCheck size={24}/></div>
+              <div><p className="text-slate-400 text-xs font-bold uppercase">Com Licitação</p><p className="text-2xl font-bold text-white">{companies.filter(c => c.licitacao).length}</p></div>
+          </div>
+          <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl flex items-center gap-4">
+              <div className="p-3 bg-yellow-500/10 rounded-xl text-yellow-400"><FileText size={24}/></div>
+              <div><p className="text-slate-400 text-xs font-bold uppercase">Emendas Ativas</p><p className="text-2xl font-bold text-white">{companies.reduce((acc, c) => acc + (c.emendas ? c.emendas.length : 0), 0)}</p></div>
+          </div>
+        </div>
+
+        {/* LISTA DE EMPRESAS */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+          {loading ? (
+             <div className="p-12 flex flex-col items-center justify-center text-slate-500">
+                 <Loader2 className="animate-spin mb-4 text-cyan-400" size={40} />
+                 <p>Carregando base de dados...</p>
+             </div>
+          ) : filteredCompanies.length === 0 ? (
+             <div className="p-12 text-center text-slate-500">
+                 <Building2 size={48} className="mx-auto mb-4 opacity-20" />
+                 <p>Nenhuma empresa encontrada.</p>
+             </div>
+          ) : (
+             <div className="overflow-x-auto">
+               <table className="w-full text-left border-collapse">
+                 <thead className="bg-slate-950 text-slate-400 uppercase text-xs font-bold tracking-wider">
+                   <tr>
+                     <th className="p-5 border-b border-slate-800">Empresa / CNPJ</th>
+                     <th className="p-5 border-b border-slate-800">Ramo de Atividade</th>
+                     <th className="p-5 border-b border-slate-800 text-center">Licitação</th>
+                     <th className="p-5 border-b border-slate-800 text-right">Ações</th>
+                   </tr>
+                 </thead>
+                 <tbody className="divide-y divide-slate-800 text-sm text-white">
+                   {filteredCompanies.map(c => (
+                     <tr key={c.id} className="hover:bg-slate-800/40 transition-colors group">
+                       <td className="p-5">
+                         <div className="flex items-center gap-4">
+                           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-slate-300 font-bold border border-slate-600 shadow-inner">
+                              {c.nome.charAt(0).toUpperCase()}
+                           </div>
+                           <div>
+                              <p className="font-bold text-base group-hover:text-cyan-400 transition-colors">{c.nome}</p>
+                              <p className="text-xs text-slate-500 font-mono tracking-wide mt-0.5">{c.cnpj}</p>
+                           </div>
+                         </div>
+                       </td>
+                       <td className="p-5">
+                          <div className="flex flex-wrap gap-2">
+                             {c.tipo?.slice(0, 2).map((t, i) => (
+                                <span key={i} className="px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs text-slate-300">{t}</span>
+                             ))}
+                             {c.tipo?.length > 2 && <span className="text-xs text-slate-500 self-center">+{c.tipo.length - 2}</span>}
+                          </div>
+                       </td>
+                       <td className="p-5 text-center">
+                         {c.licitacao ? (
+                           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-xs font-bold">
+                              <ShieldCheck size={14} /> SIM
+                           </div>
+                         ) : (
+                           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-800 border border-slate-700 rounded-full text-slate-500 text-xs font-bold">
+                              <ShieldAlert size={14} /> NÃO
+                           </div>
+                         )}
+                       </td>
+                       <td className="p-5">
+                         <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-60 group-hover:opacity-100 transition-opacity">
+                           <button onClick={() => exportToExcel(c)} className="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition-colors" title="Baixar Excel"><FileSpreadsheet size={18}/></button>
+                           <button onClick={() => openDetailsModal(c)} className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors" title="Ver Extrato"><Eye size={18}/></button>
+                           <button onClick={() => openEditModal(c)} className="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded-lg transition-colors" title="Editar"><Pencil size={18}/></button>
+                           <button onClick={() => handleDeleteClick(c.id)} className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Excluir"><Trash2 size={18}/></button>
+                         </div>
+                       </td>
+                     </tr>
+                   ))}
+                 </tbody>
+               </table>
+             </div>
+          )}
+        </div>
+      </div>
+    </>
   );
 }

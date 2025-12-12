@@ -146,6 +146,7 @@ export default function Comparativo() {
             <p className="mt-4 text-slate-400 font-medium animate-pulse">Processando dados financeiros...</p>
           </div>
         ) : (
+          /* ALTERAÇÃO AQUI: xl:grid-cols-3 no container geral */
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 pb-8">
             
             <div id="print-area" className="xl:col-span-2 min-w-0">
@@ -159,7 +160,7 @@ export default function Comparativo() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 print:grid-cols-3 print:gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8 print:grid-cols-3 print:gap-4">
                 <div className="p-6 bg-slate-900 print:bg-white border border-red-500/20 print:border-black rounded-2xl shadow-lg flex items-center justify-between">
                   <div><p className="text-slate-400 print:text-black text-sm mb-1 font-bold">Total Compras (Dívida)</p><h3 className="text-2xl font-bold text-red-400 print:text-black font-mono">{formatMoney(stats.totalIn)}</h3></div>
                   <div className="p-3 bg-red-500/10 rounded-full text-red-400 print:hidden"><TrendingDown size={24} /></div>
@@ -168,7 +169,8 @@ export default function Comparativo() {
                   <div><p className="text-slate-400 print:text-black text-sm mb-1 font-bold">Total Pagos (Baixas)</p><h3 className="text-2xl font-bold text-green-400 print:text-black font-mono">{formatMoney(stats.totalOut)}</h3></div>
                   <div className="p-3 bg-green-500/10 rounded-full text-green-400 print:hidden"><TrendingUp size={24} /></div>
                 </div>
-                <div className="p-6 bg-slate-900 print:bg-white border border-slate-700 print:border-black rounded-2xl shadow-lg flex items-center justify-between">
+                {/* O terceiro card ocupará 2 colunas no tablet se precisar, ou ficará sozinho */}
+                <div className="p-6 bg-slate-900 print:bg-white border border-slate-700 print:border-black rounded-2xl shadow-lg flex items-center justify-between md:col-span-2 xl:col-span-1">
                   <div><p className="text-slate-400 print:text-black text-sm mb-1 font-bold">Saldo Devedor Atual</p><h3 className={`text-2xl font-bold font-mono ${stats.balance > 0 ? 'text-red-500 print:text-black' : 'text-green-500 print:text-black'}`}>{formatMoney(stats.balance)}</h3></div>
                   <div className="p-3 bg-slate-800 rounded-full text-slate-300 print:hidden"><Wallet size={24} /></div>
                 </div>
@@ -225,6 +227,7 @@ export default function Comparativo() {
               </div>
             </div>
 
+            {/* GRÁFICO */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col items-center justify-center h-fit no-print">
               <h3 className="font-bold text-white mb-6">Proporção Visual</h3>
               <div className="w-full max-w-[250px]">
